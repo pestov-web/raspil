@@ -1,0 +1,72 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="256" fill="#4f46e5"/>
+  
+  <!-- Calculator Body -->
+  <rect x="140" y="120" width="232" height="280" rx="16" fill="#ffffff"/>
+  <rect x="155" y="135" width="202" height="250" rx="8" fill="#f8fafc"/>
+  
+  <!-- Screen -->
+  <rect x="170" y="150" width="172" height="50" rx="6" fill="#1e293b"/>
+  
+  <!-- Screen Text (₽) -->
+  <text x="256" y="185" text-anchor="middle" fill="#10b981" font-family="system-ui" font-size="28" font-weight="bold">₽</text>
+  
+  <!-- Calculator Buttons Grid -->
+  <!-- Row 1 -->
+  <circle cx="190" cy="235" r="15" fill="#e2e8f0"/>
+  <circle cx="230" cy="235" r="15" fill="#e2e8f0"/>
+  <circle cx="270" cy="235" r="15" fill="#e2e8f0"/>
+  <circle cx="310" cy="235" r="15" fill="#f97316"/>
+  
+  <!-- Row 2 -->
+  <circle cx="190" cy="265" r="15" fill="#e2e8f0"/>
+  <circle cx="230" cy="265" r="15" fill="#e2e8f0"/>
+  <circle cx="270" cy="265" r="15" fill="#e2e8f0"/>
+  <circle cx="310" cy="265" r="15" fill="#f97316"/>
+  
+  <!-- Row 3 -->
+  <circle cx="190" cy="295" r="15" fill="#e2e8f0"/>
+  <circle cx="230" cy="295" r="15" fill="#e2e8f0"/>
+  <circle cx="270" cy="295" r="15" fill="#e2e8f0"/>
+  <circle cx="310" cy="295" r="15" fill="#f97316"/>
+  
+  <!-- Row 4 -->
+  <circle cx="190" cy="325" r="15" fill="#e2e8f0"/>
+  <circle cx="230" cy="325" r="15" fill="#e2e8f0"/>
+  <circle cx="270" cy="325" r="15" fill="#e2e8f0"/>
+  <circle cx="310" cy="325" r="15" fill="#10b981"/>
+  
+  <!-- Numbers on buttons -->
+  <text x="190" y="240" text-anchor="middle" fill="#334155" font-family="system-ui" font-size="12" font-weight="600">7</text>
+  <text x="230" y="240" text-anchor="middle" fill="#334155" font-family="system-ui" font-size="12" font-weight="600">8</text>
+  <text x="270" y="240" text-anchor="middle" fill="#334155" font-family="system-ui" font-size="12" font-weight="600">9</text>
+  <text x="310" y="240" text-anchor="middle" fill="#ffffff" font-family="system-ui" font-size="12" font-weight="600">÷</text>
+  
+  <text x="190" y="270" text-anchor="middle" fill="#334155" font-family="system-ui" font-size="12" font-weight="600">4</text>
+  <text x="230" y="270" text-anchor="middle" fill="#334155" font-family="system-ui" font-size="12" font-weight="600">5</text>
+  <text x="270" y="270" text-anchor="middle" fill="#334155" font-family="system-ui" font-size="12" font-weight="600">6</text>
+  <text x="310" y="270" text-anchor="middle" fill="#ffffff" font-family="system-ui" font-size="12" font-weight="600">×</text>
+  
+  <text x="190" y="300" text-anchor="middle" fill="#334155" font-family="system-ui" font-size="12" font-weight="600">1</text>
+  <text x="230" y="300" text-anchor="middle" fill="#334155" font-family="system-ui" font-size="12" font-weight="600">2</text>
+  <text x="270" y="300" text-anchor="middle" fill="#334155" font-family="system-ui" font-size="12" font-weight="600">3</text>
+  <text x="310" y="300" text-anchor="middle" fill="#ffffff" font-family="system-ui" font-size="12" font-weight="600">-</text>
+  
+  <text x="190" y="330" text-anchor="middle" fill="#334155" font-family="system-ui" font-size="12" font-weight="600">0</text>
+  <text x="230" y="330" text-anchor="middle" fill="#334155" font-family="system-ui" font-size="12" font-weight="600">.</text>
+  <text x="270" y="330" text-anchor="middle" fill="#334155" font-family="system-ui" font-size="12" font-weight="600">C</text>
+  <text x="310" y="330" text-anchor="middle" fill="#ffffff" font-family="system-ui" font-size="12" font-weight="600">=</text>
+  
+  <!-- Money/Split decoration -->
+  <g transform="translate(200, 350)">
+    <!-- Coins -->
+    <circle cx="0" cy="0" r="8" fill="#fbbf24" stroke="#f59e0b" stroke-width="1"/>
+    <circle cx="15" cy="-5" r="8" fill="#fbbf24" stroke="#f59e0b" stroke-width="1"/>
+    <circle cx="30" cy="0" r="8" fill="#fbbf24" stroke="#f59e0b" stroke-width="1"/>
+    
+    <!-- Split arrows -->
+    <path d="M 50 -5 L 65 -10 L 65 -2 L 80 -2 L 80 2 L 65 2 L 65 10 Z" fill="#10b981"/>
+    <path d="M 90 -5 L 105 -10 L 105 -2 L 120 -2 L 120 2 L 105 2 L 105 10 Z" fill="#10b981"/>
+  </g>
+</svg>

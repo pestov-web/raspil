@@ -2,11 +2,50 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { VitePWA } from 'vite-plugin-pwa';
 import { fileURLToPath, URL } from 'node:url';
 
 // https://vite.dev/config/
 export default defineConfig({
-    plugins: [react(), tailwindcss()],
+    plugins: [
+        react(),
+        tailwindcss(),
+        VitePWA({
+            registerType: 'autoUpdate',
+            includeAssets: ['favicon.ico', 'icon.svg', 'favicon.svg'],
+            manifest: {
+                name: 'Raspil - Калькулятор расходов',
+                short_name: 'Raspil',
+                description: 'Простой калькулятор для справедливого разделения общих расходов',
+                theme_color: '#4f46e5',
+                background_color: '#ffffff',
+                display: 'standalone',
+                scope: '/',
+                start_url: '/',
+                icons: [
+                    {
+                        src: 'icon.svg',
+                        sizes: '192x192',
+                        type: 'image/svg+xml',
+                    },
+                    {
+                        src: 'icon.svg',
+                        sizes: '512x512',
+                        type: 'image/svg+xml',
+                    },
+                    {
+                        src: 'favicon.svg',
+                        sizes: '32x32',
+                        type: 'image/svg+xml',
+                        purpose: 'favicon',
+                    },
+                ],
+            },
+            workbox: {
+                globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+            },
+        }),
+    ],
     resolve: {
         alias: {
             '~app': fileURLToPath(new URL('./src/app', import.meta.url)),
