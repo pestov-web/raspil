@@ -1,0 +1,1 @@
+export { PeopleManagerControls } from './PeopleManagerControls';
