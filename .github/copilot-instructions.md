@@ -48,7 +48,7 @@ This is "Raspil" - a React expense calculator app built with Vite, TypeScript, a
     │   └── session/           # Session model, creation & metadata helpers
     └── shared/                # ⚡ Reusable resources
         ├── lib/               # Business calculations & storage helpers
-        ├── ui/                # UI components (StatCard)
+    ├── ui/                # UI components (StatCard, ToastProvider, ConfirmDialog)
         ├── styles/            # Global CSS
         └── types/             # Global type declarations
     ```
@@ -90,11 +90,14 @@ This is "Raspil" - a React expense calculator app built with Vite, TypeScript, a
 -   **Icons:** Lucide React (`Plus`, `Calculator`, `Users`, `MinusCircle`, `Calendar`, `DollarSign`, etc.)
 -   **Layout:** Responsive grid layouts, max-width containers
 -   **Shared Components:** `~shared/ui/StatCard` for consistent cards
+    -   Глобальные уведомления через `ToastProvider` и `useToast`
+    -   Диалоги подтверждения через `ConfirmDialog`
 
 ## Integration Points
 
 -   **Vite Config:** React plugin + Tailwind CSS plugin + FSD path aliases + `vite-plugin-pwa`
 -   **Routing:** `react-router-dom` powers `/` (Home) and `/share` (import shared session)
+-   **Toast & Dialog Infrastructure:** `ToastProvider` оборачивает `App`, для уведомлений используйте `useToast`; для подтверждений и вводов — Headless UI `Dialog` и `ConfirmDialog`
 -   **ESLint:** Modern flat config with React hooks, refresh plugins
 -   **TypeScript:** Full `.tsx` files with strict mode + FSD path aliases
 -   **Vitest:** Unit testing configured with jsdom environment
@@ -122,6 +125,10 @@ This is "Raspil" - a React expense calculator app built with Vite, TypeScript, a
     -   Convert `createdAt` / `updatedAt` fields back to `Date` when rehydrating sessions
     -   Avoid direct `localStorage` usage outside storage helper module
     -   Sharing helpers (`createShareUrl`, `decodeSessionFromShare`) live in `~shared/lib/share`
+-   **User Feedback:**
+    -   Не используйте `alert` / `prompt` / `confirm`; вместо этого применяйте `useToast` и Headless UI `Dialog`
+    -   Для подтверждения действий (удаление сессии, новая сессия) используйте `ConfirmDialog`
+    -   Для ошибок копирования ссылок предусмотрен fallback-модал с ручным копированием
 -   **PWA Assets:** Keep `public/icon.svg`, `public/favicon.svg`, and generated PNG variants in sync with `vite.config.js`
 
 ## Code Examples

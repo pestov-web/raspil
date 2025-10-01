@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
+import { Dialog, Transition } from '@headlessui/react';
 import { Users } from 'lucide-react';
 import type { Person } from '~entities/person';
 import { createPerson } from '~entities/person';
@@ -11,11 +12,18 @@ import { ExpenseSummary } from '~widgets/expense-summary';
 import { PeopleTable } from '~widgets/people-table';
 import { SessionControls } from '~widgets/session-controls';
 import { SessionManagerModal } from '~widgets/session-manager';
+import { useToast, ConfirmDialog } from '~shared/ui';
 
 export const HomePage = () => {
     const [people, setPeople] = useState<Person[]>([{ id: 1, name: '', expenses: '', duty: 0 }]);
     const [currentSession, setCurrentSession] = useState<Session | null>(null);
     const [showSessionManager, setShowSessionManager] = useState(false);
+    const toast = useToast();
+    const [isSaveDialogOpen, setSaveDialogOpen] = useState(false);
+    const [sessionNameDraft, setSessionNameDraft] = useState('');
+    const [isNewSessionConfirmOpen, setNewSessionConfirmOpen] = useState(false);
+    const [isShareDialogOpen, setShareDialogOpen] = useState(false);
+    const [shareDialogLink, setShareDialogLink] = useState<string | null>(null);
 
     useEffect(() => {
         const savedSession = storage.loadCurrentSession();
@@ -43,6 +51,12 @@ export const HomePage = () => {
         }
     }, [people]);
 
+    useEffect(() => {
+        if (currentSession) {
+            setSessionNameDraft(currentSession.name);
+        }
+    }, [currentSession?.name]);
+
     const addPerson = () => {
         const newPerson = createPerson({ name: '', expenses: '' }, people);
         setPeople([...people, newPerson]);
@@ -64,18 +78,30 @@ export const HomePage = () => {
     };
 
     const handleSaveSession = () => {
-        if (currentSession) {
-            const sessionName = prompt('Введите название сессии:', currentSession.name);
-            if (sessionName && sessionName.trim()) {
-                const sessionToSave = updateSession(currentSession, {
-                    name: sessionName.trim(),
-                    people,
-                    isCalculated: people.some((p) => p.duty !== 0),
-                });
-                storage.saveNamedSession(sessionToSave);
-                alert('Сессия сохранена!');
-            }
+        if (!currentSession) return;
+        setSessionNameDraft(currentSession.name);
+        setSaveDialogOpen(true);
+    };
+
+    const confirmSaveSession = () => {
+        if (!currentSession) return;
+        const name = sessionNameDraft.trim();
+        if (!name) {
+            toast.error('Введите название сессии');
+            return;
         }
+
+        const sessionToSave = updateSession(currentSession, {
+            name,
+            people,
+            isCalculated: people.some((p) => p.duty !== 0),
+        });
+
+        storage.saveNamedSession(sessionToSave);
+        setCurrentSession(sessionToSave);
+        setSessionNameDraft(name);
+        toast.success('Сессия сохранена');
+        setSaveDialogOpen(false);
     };
 
     const handleLoadSession = (sessionId: string) => {
@@ -86,7 +112,7 @@ export const HomePage = () => {
             setCurrentSession(sessionToLoad);
             setPeople(sessionToLoad.people);
             setShowSessionManager(false);
-            alert(`Сессия "${sessionToLoad.name}" загружена!`);
+            toast.success(`Сессия "${sessionToLoad.name}" загружена`);
         }
     };
 
@@ -95,16 +121,24 @@ export const HomePage = () => {
     };
 
     const handleNewSession = () => {
-        const confirmed = confirm('Создать новую сессию? Текущий расчет будет сохранен автоматически.');
-        if (confirmed) {
-            const newSession = createSession({
-                name: 'Новый расчет',
-                description: 'Автоматически созданная сессия',
-                people: [{ id: 1, name: '', expenses: '', duty: 0 }],
-            });
-            setCurrentSession(newSession);
-            setPeople(newSession.people);
-        }
+        setNewSessionConfirmOpen(true);
+    };
+
+    const confirmNewSession = () => {
+        const newSession = createSession({
+            name: 'Новый расчет',
+            description: 'Автоматически созданная сессия',
+            people: [{ id: 1, name: '', expenses: '', duty: 0 }],
+        });
+
+        setCurrentSession(newSession);
+        setPeople(newSession.people);
+        setNewSessionConfirmOpen(false);
+        toast.info('Создана новая сессия');
+    };
+
+    const cancelNewSession = () => {
+        setNewSessionConfirmOpen(false);
     };
 
     const handleShareSession = async () => {
@@ -130,6 +164,7 @@ export const HomePage = () => {
                     text: summary,
                     url: shareUrl,
                 });
+                toast.success('Ссылка на расчет отправлена через системное меню');
                 return;
             } catch (error) {
                 console.warn('Web Share API failed, fallback to clipboard.', error);
@@ -138,10 +173,29 @@ export const HomePage = () => {
 
         try {
             await navigator.clipboard.writeText(shareUrl);
-            alert('Ссылка на расчет скопирована в буфер обмена!');
+            toast.success('Ссылка на расчет скопирована в буфер обмена');
         } catch (error) {
             console.error('Failed to copy share link:', error);
-            prompt('Скопируйте ссылку вручную:', shareUrl);
+            setShareDialogLink(shareUrl);
+            setShareDialogOpen(true);
+            toast.error('Не удалось скопировать ссылку автоматически. Скопируйте ссылку вручную.');
+        }
+    };
+
+    const closeShareDialog = () => {
+        setShareDialogOpen(false);
+        setShareDialogLink(null);
+    };
+
+    const handleCopyShareDialogLink = async () => {
+        if (!shareDialogLink) return;
+        try {
+            await navigator.clipboard.writeText(shareDialogLink);
+            toast.success('Ссылка скопирована в буфер обмена');
+            closeShareDialog();
+        } catch (error) {
+            console.error('Failed to copy share link from dialog:', error);
+            toast.error('Не удалось скопировать ссылку. Попробуйте вручную.');
         }
     };
 
@@ -191,6 +245,149 @@ export const HomePage = () => {
                 onLoadSession={handleLoadSession}
                 onDeleteSession={handleDeleteSession}
             />
+
+            <Transition show={isSaveDialogOpen} as={Fragment} appear>
+                <Dialog as='div' className='relative z-50' onClose={() => setSaveDialogOpen(false)}>
+                    <Transition.Child
+                        as={Fragment}
+                        enter='duration-200 ease-out'
+                        enterFrom='opacity-0'
+                        enterTo='opacity-100'
+                        leave='duration-150 ease-in'
+                        leaveFrom='opacity-100'
+                        leaveTo='opacity-0'
+                    >
+                        <div className='fixed inset-0 bg-black/30 backdrop-blur-sm' />
+                    </Transition.Child>
+
+                    <div className='fixed inset-0 flex items-center justify-center p-4'>
+                        <Transition.Child
+                            as={Fragment}
+                            enter='duration-200 ease-out'
+                            enterFrom='opacity-0 scale-95'
+                            enterTo='opacity-100 scale-100'
+                            leave='duration-150 ease-in'
+                            leaveFrom='opacity-100 scale-100'
+                            leaveTo='opacity-0 scale-95'
+                        >
+                            <Dialog.Panel className='w-full max-w-md rounded-2xl bg-white p-6 shadow-xl'>
+                                <Dialog.Title className='text-lg font-semibold text-gray-900'>
+                                    Сохранить сессию
+                                </Dialog.Title>
+                                <Dialog.Description className='mt-2 text-sm text-gray-600'>
+                                    Укажите понятное название, чтобы потом легко найти расчет.
+                                </Dialog.Description>
+
+                                <form
+                                    className='mt-4 space-y-4'
+                                    onSubmit={(event) => {
+                                        event.preventDefault();
+                                        confirmSaveSession();
+                                    }}
+                                >
+                                    <div>
+                                        <label htmlFor='session-name' className='text-sm font-medium text-gray-700'>
+                                            Название сессии
+                                        </label>
+                                        <input
+                                            id='session-name'
+                                            value={sessionNameDraft}
+                                            onChange={(event) => setSessionNameDraft(event.target.value)}
+                                            className='mt-2 w-full rounded-xl border border-gray-200 px-3 py-2 text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200'
+                                            placeholder='Например, Поездка в Казань'
+                                            autoFocus
+                                        />
+                                    </div>
+
+                                    <div className='flex justify-end gap-3 pt-2'>
+                                        <button
+                                            type='button'
+                                            onClick={() => setSaveDialogOpen(false)}
+                                            className='rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50'
+                                        >
+                                            Отмена
+                                        </button>
+                                        <button
+                                            type='submit'
+                                            className='rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700'
+                                        >
+                                            Сохранить
+                                        </button>
+                                    </div>
+                                </form>
+                            </Dialog.Panel>
+                        </Transition.Child>
+                    </div>
+                </Dialog>
+            </Transition>
+
+            <ConfirmDialog
+                open={isNewSessionConfirmOpen}
+                onClose={cancelNewSession}
+                onConfirm={confirmNewSession}
+                title='Создать новую сессию?'
+                description='Текущий расчет сохранится автоматически, и вы начнете с чистого листа.'
+                confirmText='Создать'
+            />
+
+            <Transition show={isShareDialogOpen} as={Fragment} appear>
+                <Dialog as='div' className='relative z-50' onClose={closeShareDialog}>
+                    <Transition.Child
+                        as={Fragment}
+                        enter='duration-200 ease-out'
+                        enterFrom='opacity-0'
+                        enterTo='opacity-100'
+                        leave='duration-150 ease-in'
+                        leaveFrom='opacity-100'
+                        leaveTo='opacity-0'
+                    >
+                        <div className='fixed inset-0 bg-black/30 backdrop-blur-sm' />
+                    </Transition.Child>
+
+                    <div className='fixed inset-0 flex items-center justify-center p-4'>
+                        <Transition.Child
+                            as={Fragment}
+                            enter='duration-200 ease-out'
+                            enterFrom='opacity-0 scale-95'
+                            enterTo='opacity-100 scale-100'
+                            leave='duration-150 ease-in'
+                            leaveFrom='opacity-100 scale-100'
+                            leaveTo='opacity-0 scale-95'
+                        >
+                            <Dialog.Panel className='w-full max-w-md rounded-2xl bg-white p-6 shadow-xl'>
+                                <Dialog.Title className='text-lg font-semibold text-gray-900'>
+                                    Поделиться расчетом
+                                </Dialog.Title>
+                                <Dialog.Description className='mt-2 text-sm text-gray-600'>
+                                    Скопируйте ссылку вручную, если автоматическое копирование не сработало.
+                                </Dialog.Description>
+
+                                <div className='mt-4 space-y-4'>
+                                    <div className='rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700 break-all'>
+                                        {shareDialogLink}
+                                    </div>
+                                    <div className='flex justify-end gap-3'>
+                                        <button
+                                            type='button'
+                                            onClick={closeShareDialog}
+                                            className='rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50'
+                                        >
+                                            Закрыть
+                                        </button>
+                                        <button
+                                            type='button'
+                                            onClick={handleCopyShareDialogLink}
+                                            className='inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700'
+                                        >
+                                            Скопировать
+                                        </button>
+                                    </div>
+                                </div>
+                            </Dialog.Panel>
+                        </Transition.Child>
+                    </div>
+                </Dialog>
+            </Transition>
         </div>
     );
 };

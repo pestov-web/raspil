@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { HomePage } from '~pages/home';
 import { ShareSessionPage } from '~pages/share-session';
+import { ToastProvider } from '~shared/ui';
 
 const router = createBrowserRouter([
     {
@@ -14,5 +15,9 @@ const router = createBrowserRouter([
 ]);
 
 export function App() {
-    return <RouterProvider router={router} />;
+    return (
+        <ToastProvider>
+            <RouterProvider router={router} />
+        </ToastProvider>
+    );
 }
