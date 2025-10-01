@@ -1,6 +1,7 @@
 import { MinusCircle } from 'lucide-react';
 import * as React from 'react';
 import type { Person } from '~entities/person';
+import { isValidExpenseInput } from '~shared/lib';
 
 interface PeopleTableProps {
     people: Person[];
@@ -11,60 +12,83 @@ interface PeopleTableProps {
 export const PeopleTable: React.FC<PeopleTableProps> = ({ people, updatePerson, removePerson }) => {
     return (
         <div className='space-y-4'>
-            {people.map((person) => (
-                <div key={person.id} className='bg-gray-50 p-4 rounded-xl border border-gray-200'>
-                    <div className='grid md:grid-cols-4 gap-4 items-end'>
-                        <div>
-                            <label className='block text-sm font-medium text-gray-700 mb-2'>Имя</label>
-                            <input
-                                type='text'
-                                placeholder='Введите имя'
-                                value={person.name}
-                                onChange={(e) => updatePerson(person.id, 'name', e.target.value)}
-                                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all'
-                            />
-                        </div>
-                        <div>
-                            <label className='block text-sm font-medium text-gray-700 mb-2'>Потратил</label>
-                            <input
-                                type='number'
-                                placeholder='0'
-                                value={person.expenses}
-                                onChange={(e) => updatePerson(person.id, 'expenses', e.target.value)}
-                                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all'
-                            />
-                        </div>
-                        <div>
-                            <label className='block text-sm font-medium text-gray-700 mb-2'>Результат</label>
-                            <div
-                                className={`px-3 py-2 rounded-lg font-semibold text-center ${
-                                    person.duty > 0
-                                        ? 'bg-red-100 text-red-700'
-                                        : person.duty < 0
-                                        ? 'bg-green-100 text-green-700'
-                                        : 'bg-gray-100 text-gray-700'
-                                }`}
-                            >
-                                {person.duty === 0
-                                    ? '0 ₽'
-                                    : person.duty > 0
-                                    ? `Должен: ${person.duty.toFixed(2)} ₽`
-                                    : `Вернуть: ${Math.abs(person.duty).toFixed(2)} ₽`}
+            {people.map((person, index) => {
+                const isExpenseInvalid = !isValidExpenseInput(person.expenses);
+
+                return (
+                    <div
+                        key={person.id}
+                        className='rounded-xl border border-gray-200 bg-gray-50 p-4 shadow-sm transition dark:border-slate-700 dark:bg-slate-800 animate-fade-in-up'
+                        style={{ animationDelay: `${index * 60}ms` }}
+                    >
+                        <div className='grid md:grid-cols-4 gap-4 items-end'>
+                            <div>
+                                <label className='mb-2 block text-sm font-medium text-gray-700 dark:text-slate-300'>
+                                    Имя
+                                </label>
+                                <input
+                                    type='text'
+                                    placeholder='Введите имя'
+                                    value={person.name}
+                                    onChange={(e) => updatePerson(person.id, 'name', e.target.value)}
+                                    className='w-full rounded-lg border border-gray-300 px-3 py-2 outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100'
+                                />
+                            </div>
+                            <div>
+                                <label className='mb-2 block text-sm font-medium text-gray-700 dark:text-slate-300'>
+                                    Потратил
+                                </label>
+                                <input
+                                    type='number'
+                                    placeholder='0'
+                                    value={person.expenses}
+                                    onChange={(e) => updatePerson(person.id, 'expenses', e.target.value)}
+                                    className={`w-full rounded-lg border px-3 py-2 outline-none transition-all focus:ring-2 ${
+                                        isExpenseInvalid
+                                            ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-200'
+                                            : 'border-gray-300 focus:border-transparent focus:ring-indigo-500 dark:border-slate-700'
+                                    } dark:bg-slate-900 dark:text-slate-100`}
+                                />
+                                {isExpenseInvalid && (
+                                    <p className='mt-2 text-sm text-rose-600 dark:text-rose-400'>
+                                        Введите неотрицательное число
+                                    </p>
+                                )}
+                            </div>
+                            <div>
+                                <label className='mb-2 block text-sm font-medium text-gray-700 dark:text-slate-300'>
+                                    Результат
+                                </label>
+                                <div
+                                    className={`rounded-lg px-3 py-2 text-center font-semibold ${
+                                        person.duty > 0
+                                            ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+                                            : person.duty < 0
+                                            ? 'bg-green-100 text-green-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                                            : 'bg-gray-100 text-gray-700 dark:bg-slate-900 dark:text-slate-200'
+                                    }`}
+                                >
+                                    {person.duty === 0
+                                        ? '0 ₽'
+                                        : person.duty > 0
+                                        ? `Должен: ${person.duty.toFixed(2)} ₽`
+                                        : `Вернуть: ${Math.abs(person.duty).toFixed(2)} ₽`}
+                                </div>
+                            </div>
+                            <div className='flex justify-center'>
+                                {people.length > 1 && (
+                                    <button
+                                        onClick={() => removePerson(person.id)}
+                                        className='rounded-lg p-2 text-red-500 transition-colors hover:bg-red-100 dark:text-rose-300 dark:hover:bg-rose-900/30'
+                                    >
+                                        <MinusCircle size={20} />
+                                    </button>
+                                )}
                             </div>
                         </div>
-                        <div className='flex justify-center'>
-                            {people.length > 1 && (
-                                <button
-                                    onClick={() => removePerson(person.id)}
-                                    className='p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors'
-                                >
-                                    <MinusCircle size={20} />
-                                </button>
-                            )}
-                        </div>
                     </div>
-                </div>
-            ))}
+                );
+            })}
         </div>
     );
 };

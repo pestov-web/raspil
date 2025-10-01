@@ -1,11 +1,18 @@
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Users } from 'lucide-react';
 import type { Person } from '~entities/person';
 import { createPerson } from '~entities/person';
 import type { Session } from '~entities/session';
 import { createSession, updateSession } from '~entities/session';
-import { calculateDuties, getPerPersonShare, getTotalExpenses, createShareUrl, storage } from '~shared/lib';
+import {
+    calculateDuties,
+    getPerPersonShare,
+    getTotalExpenses,
+    createShareUrl,
+    storage,
+    isValidExpenseInput,
+} from '~shared/lib';
 import { ExpenseStats } from '~widgets/expense-calculator';
 import { PeopleManagerControls } from '~widgets/people-manager';
 import { ExpenseSummary } from '~widgets/expense-summary';
@@ -13,6 +20,7 @@ import { PeopleTable } from '~widgets/people-table';
 import { SessionControls } from '~widgets/session-controls';
 import { SessionManagerModal } from '~widgets/session-manager';
 import { useToast, ConfirmDialog } from '~shared/ui';
+import { ThemeToggle } from '~features/toggle-theme';
 
 export const HomePage = () => {
     const [people, setPeople] = useState<Person[]>([{ id: 1, name: '', expenses: '', duty: 0 }]);
@@ -24,6 +32,8 @@ export const HomePage = () => {
     const [isNewSessionConfirmOpen, setNewSessionConfirmOpen] = useState(false);
     const [isShareDialogOpen, setShareDialogOpen] = useState(false);
     const [shareDialogLink, setShareDialogLink] = useState<string | null>(null);
+
+    const hasInvalidExpenses = useMemo(() => people.some((person) => !isValidExpenseInput(person.expenses)), [people]);
 
     useEffect(() => {
         const savedSession = storage.loadCurrentSession();
@@ -40,22 +50,27 @@ export const HomePage = () => {
     }, []);
 
     useEffect(() => {
-        if (currentSession) {
-            const updatedSession = updateSession(currentSession, {
+        setCurrentSession((previous) => {
+            if (!previous) {
+                return previous;
+            }
+
+            const updatedSession = updateSession(previous, {
                 people,
                 totalExpenses: getTotalExpenses(people),
                 isCalculated: people.some((p) => p.duty !== 0),
             });
-            setCurrentSession(updatedSession);
+
             storage.saveCurrentSession(updatedSession);
-        }
+            return updatedSession;
+        });
     }, [people]);
 
     useEffect(() => {
         if (currentSession) {
             setSessionNameDraft(currentSession.name);
         }
-    }, [currentSession?.name]);
+    }, [currentSession]);
 
     const addPerson = () => {
         const newPerson = createPerson({ name: '', expenses: '' }, people);
@@ -73,6 +88,10 @@ export const HomePage = () => {
     };
 
     const handleCalculateDuties = () => {
+        if (hasInvalidExpenses) {
+            toast.error('Исправьте ошибки в суммах, чтобы выполнить расчет');
+            return;
+        }
         const updatedPeople = calculateDuties(people);
         setPeople(updatedPeople);
     };
@@ -203,26 +222,44 @@ export const HomePage = () => {
     const perPersonShare = getPerPersonShare(people);
 
     return (
-        <div className='min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4'>
-            <div className='max-w-4xl mx-auto'>
-                <div className='bg-white rounded-2xl shadow-xl p-6 mb-6'>
-                    <div className='flex items-center justify-between mb-6'>
-                        <div className='flex items-center gap-3'>
-                            <Users className='text-indigo-600' size={32} />
-                            <div>
-                                <h1 className='text-3xl font-bold text-gray-800'>Калькулятор расходов</h1>
-                                {currentSession && (
-                                    <p className='text-sm text-gray-600 mt-1'>Сессия: {currentSession.name}</p>
-                                )}
-                            </div>
-                        </div>
+        <div className='min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 transition-colors dark:from-slate-950 dark:to-slate-900'>
+            <header className='mx-auto mb-6 flex max-w-4xl flex-col items-start gap-4 rounded-2xl border border-transparent bg-white/80 px-6 py-4 shadow-xl backdrop-blur transition-colors dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-100 md:flex-row md:items-center md:justify-between'>
+                <div className='flex items-center gap-3'>
+                    <Users className='text-indigo-600 dark:text-indigo-400' size={32} />
+                    <div>
+                        <h1 className='text-2xl font-bold text-gray-800 dark:text-slate-100'>Калькулятор расходов</h1>
+                        <p className='text-sm text-gray-600 dark:text-slate-400'>
+                            Простой способ честно разделить общие траты
+                        </p>
+                    </div>
+                </div>
 
-                        <SessionControls
-                            onOpenManager={() => setShowSessionManager(true)}
-                            onSaveSession={handleSaveSession}
-                            onNewSession={handleNewSession}
-                            onShareSession={handleShareSession}
-                        />
+                <ThemeToggle className='w-full justify-center md:w-auto' />
+            </header>
+
+            <div className='mx-auto max-w-4xl text-gray-900 transition-colors dark:text-slate-100'>
+                <div className='rounded-2xl border border-transparent bg-white p-6 shadow-xl transition-colors dark:border-slate-800 dark:bg-slate-900'>
+                    <div className='mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
+                        {currentSession && (
+                            <div className='flex items-start justify-between gap-3 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-600 transition-colors dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-300 md:flex-1'>
+                                <div>
+                                    <p className='font-medium text-gray-800 dark:text-slate-100'>Текущая сессия</p>
+                                    <p className='text-sm'>{currentSession.name}</p>
+                                </div>
+                                <span className='rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-200'>
+                                    Черновик сохраняется автоматически
+                                </span>
+                            </div>
+                        )}
+
+                        <div className='flex items-center justify-end gap-2 text-sm self-stretch md:self-auto'>
+                            <SessionControls
+                                onOpenManager={() => setShowSessionManager(true)}
+                                onSaveSession={handleSaveSession}
+                                onNewSession={handleNewSession}
+                                onShareSession={handleShareSession}
+                            />
+                        </div>
                     </div>
 
                     <ExpenseStats people={people} totalExpenses={totalExpenses} perPersonShare={perPersonShare} />
@@ -230,9 +267,9 @@ export const HomePage = () => {
                     <PeopleTable people={people} updatePerson={updatePerson} removePerson={removePerson} />
 
                     <PeopleManagerControls
-                        people={people}
                         onAddPerson={addPerson}
                         onCalculateDuties={handleCalculateDuties}
+                        hasInvalidExpenses={hasInvalidExpenses}
                     />
 
                     <ExpenseSummary people={people} totalExpenses={totalExpenses} perPersonShare={perPersonShare} />
@@ -270,11 +307,11 @@ export const HomePage = () => {
                             leaveFrom='opacity-100 scale-100'
                             leaveTo='opacity-0 scale-95'
                         >
-                            <Dialog.Panel className='w-full max-w-md rounded-2xl bg-white p-6 shadow-xl'>
-                                <Dialog.Title className='text-lg font-semibold text-gray-900'>
+                            <Dialog.Panel className='w-full max-w-md rounded-2xl bg-white p-6 shadow-xl transition-colors dark:border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100'>
+                                <Dialog.Title className='text-lg font-semibold text-gray-900 dark:text-slate-100'>
                                     Сохранить сессию
                                 </Dialog.Title>
-                                <Dialog.Description className='mt-2 text-sm text-gray-600'>
+                                <Dialog.Description className='mt-2 text-sm text-gray-600 dark:text-slate-400'>
                                     Укажите понятное название, чтобы потом легко найти расчет.
                                 </Dialog.Description>
 
@@ -286,14 +323,17 @@ export const HomePage = () => {
                                     }}
                                 >
                                     <div>
-                                        <label htmlFor='session-name' className='text-sm font-medium text-gray-700'>
+                                        <label
+                                            htmlFor='session-name'
+                                            className='text-sm font-medium text-gray-700 dark:text-slate-300'
+                                        >
                                             Название сессии
                                         </label>
                                         <input
                                             id='session-name'
                                             value={sessionNameDraft}
                                             onChange={(event) => setSessionNameDraft(event.target.value)}
-                                            className='mt-2 w-full rounded-xl border border-gray-200 px-3 py-2 text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200'
+                                            className='mt-2 w-full rounded-xl border border-gray-200 px-3 py-2 text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100'
                                             placeholder='Например, Поездка в Казань'
                                             autoFocus
                                         />
@@ -303,7 +343,7 @@ export const HomePage = () => {
                                         <button
                                             type='button'
                                             onClick={() => setSaveDialogOpen(false)}
-                                            className='rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50'
+                                            className='rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
                                         >
                                             Отмена
                                         </button>
@@ -354,23 +394,23 @@ export const HomePage = () => {
                             leaveFrom='opacity-100 scale-100'
                             leaveTo='opacity-0 scale-95'
                         >
-                            <Dialog.Panel className='w-full max-w-md rounded-2xl bg-white p-6 shadow-xl'>
-                                <Dialog.Title className='text-lg font-semibold text-gray-900'>
+                            <Dialog.Panel className='w-full max-w-md rounded-2xl bg-white p-6 shadow-xl transition-colors dark:border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100'>
+                                <Dialog.Title className='text-lg font-semibold text-gray-900 dark:text-slate-100'>
                                     Поделиться расчетом
                                 </Dialog.Title>
-                                <Dialog.Description className='mt-2 text-sm text-gray-600'>
+                                <Dialog.Description className='mt-2 text-sm text-gray-600 dark:text-slate-400'>
                                     Скопируйте ссылку вручную, если автоматическое копирование не сработало.
                                 </Dialog.Description>
 
                                 <div className='mt-4 space-y-4'>
-                                    <div className='rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700 break-all'>
+                                    <div className='break-all rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100'>
                                         {shareDialogLink}
                                     </div>
                                     <div className='flex justify-end gap-3'>
                                         <button
                                             type='button'
                                             onClick={closeShareDialog}
-                                            className='rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50'
+                                            className='rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
                                         >
                                             Закрыть
                                         </button>

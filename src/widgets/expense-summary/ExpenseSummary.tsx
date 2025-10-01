@@ -60,32 +60,36 @@ export const ExpenseSummary: React.FC<ExpenseSummaryProps> = ({ people, totalExp
     return (
         <div className='mt-6 space-y-4'>
             {/* Общая статистика */}
-            <div className='bg-blue-50 rounded-xl p-4'>
-                <h3 className='text-lg font-semibold text-blue-800 mb-3 flex items-center gap-2'>
+            <div className='rounded-xl bg-blue-50 p-4 dark:bg-slate-800'>
+                <h3 className='mb-3 flex items-center gap-2 text-lg font-semibold text-blue-800 dark:text-blue-200'>
                     <TrendingUp size={20} />
                     Сводка расчетов
                 </h3>
 
-                <div className='grid md:grid-cols-3 gap-4 text-sm mb-4'>
+                <div className='mb-4 grid gap-4 text-sm md:grid-cols-3'>
                     <div className='text-center'>
-                        <div className='text-2xl font-bold text-blue-700'>{totalExpenses.toFixed(2)} ₽</div>
-                        <div className='text-blue-600'>Общие расходы</div>
+                        <div className='text-2xl font-bold text-blue-700 dark:text-blue-200'>
+                            {totalExpenses.toFixed(2)} ₽
+                        </div>
+                        <div className='text-blue-600 dark:text-blue-300'>Общие расходы</div>
                     </div>
                     <div className='text-center'>
-                        <div className='text-2xl font-bold text-blue-700'>{perPersonShare.toFixed(2)} ₽</div>
-                        <div className='text-blue-600'>На каждого</div>
+                        <div className='text-2xl font-bold text-blue-700 dark:text-blue-200'>
+                            {perPersonShare.toFixed(2)} ₽
+                        </div>
+                        <div className='text-blue-600 dark:text-blue-300'>На каждого</div>
                     </div>
                     <div className='text-center'>
-                        <div className='text-2xl font-bold text-blue-700'>{transfers.length}</div>
-                        <div className='text-blue-600'>Переводов нужно</div>
+                        <div className='text-2xl font-bold text-blue-700 dark:text-blue-200'>{transfers.length}</div>
+                        <div className='text-blue-600 dark:text-blue-300'>Переводов нужно</div>
                     </div>
                 </div>
             </div>
 
             {/* Оптимальные переводы */}
             {transfers.length > 0 && (
-                <div className='bg-green-50 rounded-xl p-4'>
-                    <h4 className='font-semibold text-green-800 mb-3 flex items-center gap-2'>
+                <div className='rounded-xl bg-green-50 p-4 dark:bg-emerald-900/30'>
+                    <h4 className='mb-3 flex items-center gap-2 font-semibold text-green-800 dark:text-emerald-200'>
                         <ArrowRight size={20} />
                         Кто кому переводит:
                     </h4>
@@ -93,18 +97,20 @@ export const ExpenseSummary: React.FC<ExpenseSummaryProps> = ({ people, totalExp
                         {transfers.map((transfer, index) => (
                             <div
                                 key={index}
-                                className='flex items-center justify-between bg-white rounded-lg p-3 shadow-sm'
+                                className='flex items-center justify-between rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900'
                             >
                                 <div className='flex items-center gap-3'>
-                                    <span className='font-medium text-gray-800'>
+                                    <span className='font-medium text-gray-800 dark:text-slate-100'>
                                         {transfer.debtor.name || `Человек ${transfer.debtor.id}`}
                                     </span>
-                                    <ArrowRight size={16} className='text-green-600' />
-                                    <span className='font-medium text-gray-800'>
+                                    <ArrowRight size={16} className='text-green-600 dark:text-emerald-300' />
+                                    <span className='font-medium text-gray-800 dark:text-slate-100'>
                                         {transfer.creditor.name || `Человек ${transfer.creditor.id}`}
                                     </span>
                                 </div>
-                                <span className='font-bold text-green-700'>{transfer.amount.toFixed(2)} ₽</span>
+                                <span className='font-bold text-green-700 dark:text-emerald-300'>
+                                    {transfer.amount.toFixed(2)} ₽
+                                </span>
                             </div>
                         ))}
                     </div>
@@ -112,32 +118,34 @@ export const ExpenseSummary: React.FC<ExpenseSummaryProps> = ({ people, totalExp
             )}
 
             {/* Детализация долгов/возвратов */}
-            <div className='grid md:grid-cols-2 gap-4'>
+            <div className='grid gap-4 md:grid-cols-2'>
                 {debts.length > 0 && (
-                    <div className='bg-red-50 rounded-xl p-4'>
-                        <h4 className='font-semibold text-red-700 mb-2 flex items-center gap-2'>
+                    <div className='rounded-xl bg-red-50 p-4 dark:bg-rose-900/30'>
+                        <h4 className='mb-2 flex items-center gap-2 font-semibold text-red-700 dark:text-rose-200'>
                             <TrendingDown size={18} />
                             Должны доплатить:
                         </h4>
                         {debts.map((person) => (
                             <div key={person.id} className='flex justify-between'>
                                 <span>{person.name || `Человек ${person.id}`}:</span>
-                                <span className='font-semibold text-red-600'>{person.duty.toFixed(2)} ₽</span>
+                                <span className='font-semibold text-red-600 dark:text-rose-300'>
+                                    {person.duty.toFixed(2)} ₽
+                                </span>
                             </div>
                         ))}
                     </div>
                 )}
 
                 {credits.length > 0 && (
-                    <div className='bg-green-50 rounded-xl p-4'>
-                        <h4 className='font-semibold text-green-700 mb-2 flex items-center gap-2'>
+                    <div className='rounded-xl bg-green-50 p-4 dark:bg-emerald-900/30'>
+                        <h4 className='mb-2 flex items-center gap-2 font-semibold text-green-700 dark:text-emerald-200'>
                             <TrendingUp size={18} />
                             Нужно вернуть:
                         </h4>
                         {credits.map((person) => (
                             <div key={person.id} className='flex justify-between'>
                                 <span>{person.name || `Человек ${person.id}`}:</span>
-                                <span className='font-semibold text-green-600'>
+                                <span className='font-semibold text-green-600 dark:text-emerald-300'>
                                     {Math.abs(person.duty).toFixed(2)} ₽
                                 </span>
                             </div>

@@ -8,6 +8,27 @@
         <meta name="description" content="Простой калькулятор для справедливого разделения общих расходов" />
         <meta name="theme-color" content="#4f46e5" />
         <title>Raspil - Калькулятор расходов</title>
+        <script>
+            (function () {
+                const storageKey = 'raspil:theme';
+                try {
+                    const stored = localStorage.getItem(storageKey);
+                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    const theme = stored === 'dark' || stored === 'light' ? stored : prefersDark ? 'dark' : 'light';
+
+                    if (theme === 'dark') {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+
+                    document.documentElement.dataset.theme = theme;
+                    document.documentElement.style.colorScheme = theme;
+                } catch (error) {
+                    console.warn('Theme bootstrap failed', error);
+                }
+            })();
+        </script>
     </head>
     <body>
         <div id="root"></div>

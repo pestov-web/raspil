@@ -1,23 +1,29 @@
 import React from 'react';
-import type { Person } from '~entities/person';
 import { AddPersonButton } from '~features/add-person';
 import { CalculateDutiesButton } from '~features/calculate-duties';
 
 interface PeopleManagerProps {
-    people: Person[];
     onAddPerson: () => void;
     onCalculateDuties: () => void;
+    hasInvalidExpenses: boolean;
 }
 
 export const PeopleManagerControls: React.FC<PeopleManagerProps> = ({
-    people: _people,
     onAddPerson,
     onCalculateDuties,
+    hasInvalidExpenses,
 }) => {
     return (
-        <div className='flex gap-4 mt-6'>
-            <AddPersonButton onAdd={onAddPerson} />
-            <CalculateDutiesButton onCalculate={onCalculateDuties} />
+        <div className='mt-6 space-y-3'>
+            <div className='flex flex-wrap gap-4'>
+                <AddPersonButton onAdd={onAddPerson} />
+                <CalculateDutiesButton onCalculate={onCalculateDuties} disabled={hasInvalidExpenses} />
+            </div>
+            {hasInvalidExpenses && (
+                <p className='text-sm text-rose-600 dark:text-rose-400'>
+                    Исправьте выделенные суммы, чтобы выполнить расчет.
+                </p>
+            )}
         </div>
     );
 };

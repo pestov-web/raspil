@@ -1,27 +1,13 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Transition } from '@headlessui/react';
 import { CheckCircle2, Info, XCircle } from 'lucide-react';
 import type { ReactNode } from 'react';
-
-export type ToastVariant = 'success' | 'error' | 'info';
-
-export interface ToastOptions {
-    title?: string;
-    description: string;
-    variant?: ToastVariant;
-    duration?: number;
-}
+import type { ToastOptions, ToastVariant } from './context';
+import { ToastContext } from './context';
 
 interface ToastDetails extends ToastOptions {
     id: number;
 }
-
-interface ToastContextValue {
-    addToast: (toast: ToastOptions) => void;
-    removeToast: (id: number) => void;
-}
-
-const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 
 const getVariantStyles = (variant: ToastVariant = 'info') => {
     switch (variant) {
@@ -103,23 +89,4 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
             </div>
         </ToastContext.Provider>
     );
-};
-
-export const useToast = () => {
-    const context = useContext(ToastContext);
-    if (!context) {
-        throw new Error('useToast must be used within a ToastProvider');
-    }
-
-    const { addToast } = context;
-
-    return {
-        show: addToast,
-        success: (description: string, options?: Omit<ToastOptions, 'description' | 'variant'>) =>
-            addToast({ description, variant: 'success', ...options }),
-        error: (description: string, options?: Omit<ToastOptions, 'description' | 'variant'>) =>
-            addToast({ description, variant: 'error', ...options }),
-        info: (description: string, options?: Omit<ToastOptions, 'description' | 'variant'>) =>
-            addToast({ description, variant: 'info', ...options }),
-    };
 };
