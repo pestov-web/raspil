@@ -40,7 +40,7 @@ src/
 └── shared/                 # ⚡ Общие ресурсы
     ├── lib/                # Бизнес-утилиты (calculations, storage, share, validation, theme)
     ├── ui/                 # Компоненты UI-кита (StatCard, ToastProvider, ConfirmDialog)
-    ├── styles/             # Tailwind и глобальные стили
+    ├── styles/             # Tailwind и глобальные стили (dark-mode @custom-variant)
     └── types/              # Общие типы и декларации
 ```
 
@@ -51,6 +51,7 @@ src/
 3. **Переиспользуемые entities** - person и session живут отдельно от фич и виджетов
 4. **Единообразный публичный API** - каждый слой экспортирует через index.ts
 5. **CI через ESLint** - `eslint-plugin-feature-sliced` следит за корректными импортами
+6. **Темизация через класс `.dark`** - не удаляйте `@custom-variant dark (&:where(.dark, .dark *));` и вызовы `theme.apply()`
 
 ## Преимущества для Raspil
 

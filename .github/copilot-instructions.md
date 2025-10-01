@@ -1,148 +1,147 @@
-# Copilot Instructions for AI Coding Agents
+# Инструкции Copilot для AI-код-агентов
 
-## Overview
+## Общее описание
 
-This is "Raspil" - a React expense calculator app built with Vite, TypeScript, and Tailwind CSS. Users can add people, track their expenses, automatically calculate who owes money to whom, and persist calculations as reusable sessions. The app follows **Feature-Sliced Design (FSD)** architecture with TypeScript types and Tailwind for styling.
+Это «Raspil» — калькулятор совместных расходов на React, собранный с помощью Vite и TypeScript и стилизованный Tailwind CSS. Пользователь может добавлять участников, учитывать их траты, получать автоматический расчёт «кто кому должен» и сохранять вычисления в повторы. Архитектура приложения — **Feature-Sliced Design (FSD)**, с строгой типизацией и слоями UI.
 
-## Application Logic & Data Flow
+## Логика приложения и поток данных
 
--   **Core Entities:**
-    -   `Person` type with `id`, `name`, `expenses` (string input), and `duty` (calculated number)
-    -   `Session` type with metadata (`id`, `name`, timestamps, people snapshot, totals, calculation flag)
--   **Main State:** Managed in `~pages/home/ui/HomePage.tsx` via `useState` for people list and active session snapshot
--   **Key Operations:**
-    -   Add/remove people (minimum 1 person enforced)
-    -   Update person fields (name, expenses)
-    -   Calculate duties: `perPersonShare - actualExpenses = duty`
-    -   Positive duty = person owes money, negative = person should receive money
-    -   Auto-save current session to LocalStorage on every change
-    -   Save/load/delete named sessions, import/export backups
-    -   Generate shareable links encoded in query params; `/share` route decodes and restores the session
+-   **Ключевые сущности:**
+    -   `Person` — поля `id`, `name`, `expenses` (строковый ввод), `duty` (рассчитанное число)
+    -   `Session` — `id`, `name`, временные метки, снимок участников, суммарные значения и флаг вычисления
+-   **Главное состояние:** хранится в `~pages/home/ui/HomePage.tsx` через `useState` (список участников и активная сессия)
+-   **Основные операции:**
+    -   Добавление/удаление участников (минимум один участник обязателен)
+    -   Редактирование имени и суммы расходов
+    -   Расчёт обязанностей: `perPersonShare - actualExpenses = duty`
+    -   Положительное значение duty — участник должен доплатить, отрицательное — должен получить
+    -   Автосохранение текущей сессии в LocalStorage на каждое изменение
+    -   Сохранение/загрузка/удаление именных сессий, импорт/экспорт бэкапов
+    -   Генерация шаринг-ссылок через корневой `/?data=...`; при загрузке приложение перенаправляет на `/share`
 
-## FSD Architecture & Key Patterns
+## Архитектура FSD и ключевые паттерны
 
--   **Entry Point:** `src/main.jsx` → `~app/main.tsx` bootstraps React app with StrictMode
--   **FSD Layers:**
+-   **Точка входа:** `src/main.jsx` → `~app/main.tsx`, где инициируется React + StrictMode
+-   **Слои FSD:**
     ```
     src/
-    ├── app/                    # 🏗 Application initialization
-    │   ├── App.tsx            # Root component composition
-    │   └── main.tsx           # Entry point
-    ├── pages/                 # 📄 Route-level screens
+    ├── app/                    # 🏗 Инициализация приложения
+    │   ├── App.tsx            # Корневой компонент и провайдеры
+    │   └── main.tsx           # Стартовая точка
+    ├── pages/                 # 📄 Страницы-роуты
     │   ├── home/              # Главный калькулятор + состояние
-    │   └── share-session/     # Импорт расчета по ссылке
-    ├── widgets/               # 🧩 Composite UI blocks
-    │   ├── expense-calculator/ # Stats and totals
-    │   ├── expense-summary/   # Results breakdown
-    │   ├── people-manager/    # Add/calculate controls
-    │   ├── people-table/      # Data input table
-    │   ├── session-controls/  # Кнопки управления + mobile меню
-    │   └── session-manager/   # Modal for saved sessions (load/delete/import/export)
-    ├── features/              # 🚀 User interactions
-    │   ├── add-person/        # Person creation
-    │   ├── calculate-duties/  # Duty calculations
-    │   ├── save-session/      # Persist calculation snapshot
-    │   └── load-session/      # Restore saved snapshot
-    ├── entities/              # 🎯 Business logic
-    │   ├── person/            # Person model & utilities
-    │   └── session/           # Session model, creation & metadata helpers
-    └── shared/                # ⚡ Reusable resources
-        ├── lib/               # Business calculations & storage helpers
-    ├── ui/                # UI components (StatCard, ToastProvider, ConfirmDialog)
-        ├── styles/            # Global CSS
-        └── types/             # Global type declarations
+    │   └── share-session/     # Импорт расчёта по ссылке
+    ├── widgets/               # 🧩 Композитные UI-блоки
+    │   ├── expense-calculator/ # Статистика и показатели
+    │   ├── expense-summary/   # Итоги и переводы
+    │   ├── people-manager/    # Кнопки добавления/расчёта
+    │   ├── people-table/      # Таблица ввода данных
+    │   ├── session-controls/  # Панель действий + мобильное меню
+    │   └── session-manager/   # Модал управления сохранёнными сессиями
+    ├── features/              # 🚀 Пользовательские сценарии
+    │   ├── add-person/        # Создание участника
+    │   ├── calculate-duties/  # Перерасчёт обязанностей
+    │   ├── save-session/      # Сохранение текущего расчёта
+    │   └── load-session/      # Восстановление сохранённой сессии
+    ├── entities/              # 🎯 Бизнес-логика
+    │   ├── person/            # Модель человека и утилиты
+    │   └── session/           # Модель сессии, создание и метаданные
+    └── shared/                # ⚡ Переиспользуемые ресурсы
+        ├── lib/               # Бизнес-расчёты и helpers работы с хранилищем
+        ├── ui/                # UI-компоненты (StatCard, ToastProvider, ConfirmDialog)
+        ├── styles/            # Глобальный CSS
+        └── types/             # Общие типы и декларации
     ```
--   **Import Rules:** Only downward - app → widgets → features → entities → shared
--   **Public APIs:** Each layer exports through `index.ts`
+-   **Правила импортов:** только «вниз» по слоям — `app → pages → widgets → features → entities → shared`
+-   **Публичные API:** каждый слой экспортируется через `index.ts`
 
-## Path Aliases
+## Псевдонимы путей
 
--   **Vite & TypeScript configured with FSD aliases:**
+-   **Настройка Vite/TypeScript:** используются FSD-алиасы
     ```typescript
-    // Instead of: import { Person } from '../../../entities/person'
+    // вместо длинных относительных путей
     import type { Person } from '~entities/person';
     import { StatCard } from '~shared/ui';
     import { AddPersonButton } from '~features/add-person';
     ```
--   **Available aliases:** `~app`, `~pages`, `~widgets`, `~features`, `~entities`, `~shared`
+-   **Доступные алиасы:** `~app`, `~pages`, `~widgets`, `~features`, `~entities`, `~shared`
 
-> When interacting with persistence, import storage helpers from `~shared/lib` and session types/utilities from `~entities/session`.
+> Для работы с данными используйте helpers из `~shared/lib`, а типы/утилиты сессий — из `~entities/session`.
 
-## Developer Workflows
+## Рабочий процесс разработчика
 
--   **Package Manager:** Uses `pnpm` (see `pnpm-lock.yaml`)
--   **Development:** `pnpm dev` starts Vite dev server with HMR
--   **Build:** `pnpm build` creates optimized production build
--   **Linting:** `pnpm lint` runs ESLint (configured for React hooks and refresh)
--   **Testing:** `pnpm test` runs Vitest unit tests (see `src/tests` for examples)
--   **Coverage:** `pnpm test:coverage` generates coverage report
--   **Preview:** `pnpm preview` serves production build locally
--   **PWA Check:** `pnpm build && pnpm preview` validates service worker/manifest output
+-   **Менеджер пакетов:** `pnpm` (`pnpm-lock.yaml` уже в репозитории)
+-   **Разработка:** `pnpm dev` запускает dev-сервер Vite с HMR
+-   **Сборка:** `pnpm build` создаёт оптимизированный продакшн-бандл
+-   **Линтинг:** `pnpm lint` — ESLint с плагинами для React и Fast Refresh
+-   **Тесты:** `pnpm test` — Vitest (пример — папка `src/tests`)
+-   **Покрытие:** `pnpm test:coverage` — отчёт покрытия
+-   **Предпросмотр:** `pnpm preview` — локальный сервер для прод-сборки
+-   **PWA-проверка:** `pnpm build && pnpm preview` — быстрая валидация SW и манифеста
 
-## Styling & UI Patterns
+## Паттерны стилизации и UI
 
--   **Framework:** Tailwind CSS v4.1.12 with Vite plugin
--   **Design System:**
-    -   Gradient backgrounds (`bg-gradient-to-br`)
-    -   Rounded corners (`rounded-xl`, `rounded-2xl`)
-    -   Shadow system (`shadow-xl`)
-    -   Color-coded states (red for debt, green for credit)
--   **Icons:** Lucide React (`Plus`, `Calculator`, `Users`, `MinusCircle`, `Calendar`, `DollarSign`, etc.)
--   **Layout:** Responsive grid layouts, max-width containers
--   **Shared Components:** `~shared/ui/StatCard` for consistent cards
-    -   Глобальные уведомления через `ToastProvider` и `useToast`
-    -   Диалоги подтверждения через `ConfirmDialog`
+-   **Фреймворк:** Tailwind CSS v4.1.12 (Vite-плагин)
+-   **Тёмная тема:** режим `class`; в `src/shared/styles/index.css` объявлено `@custom-variant dark (&:where(.dark, .dark *));`, а `theme.apply()` из `~shared/lib/theme.ts` синхронизирует класс и `data-theme` на `<html>` и `<body>`
+-   **Дизайн-система:**
+    -   Градиентные подложки (`bg-gradient-to-br`)
+    -   Закругления (`rounded-xl`, `rounded-2xl`)
+    -   Тени (`shadow-xl`)
+    -   Цветовые состояния (красный — долг, зелёный — возврат)
+-   **Иконки:** Lucide React (`Plus`, `Calculator`, `Users`, `MinusCircle`, `Calendar`, `DollarSign` и др.)
+-   **Макеты:** адаптивные сетки, ограничение по ширине контейнеров
+-   **Шаред-компоненты:** `~shared/ui/StatCard`, уведомления через `ToastProvider`, диалоги через `ConfirmDialog`
 
-## Integration Points
+## Точки интеграции
 
--   **Vite Config:** React plugin + Tailwind CSS plugin + FSD path aliases + `vite-plugin-pwa`
--   **Routing:** `react-router-dom` powers `/` (Home) and `/share` (import shared session)
--   **Toast & Dialog Infrastructure:** `ToastProvider` оборачивает `App`, для уведомлений используйте `useToast`; для подтверждений и вводов — Headless UI `Dialog` и `ConfirmDialog`
--   **ESLint:** Modern flat config with React hooks, refresh plugins
--   **TypeScript:** Full `.tsx` files with strict mode + FSD path aliases
--   **Vitest:** Unit testing configured with jsdom environment
--   **Persistence:** LocalStorage via shared storage helpers (no backend/API)
+-   **Vite:** React-плагин, Tailwind-плагин, FSD-алиасы, `vite-plugin-pwa`
+-   **Роутинг:** `react-router-dom` для маршрутов `/` и `/share`; перед монтированием см. `bootstrapShareRoute` в `~app/main.tsx`, который переводит `/?data=...` на `/share`
+-   **Уведомления и диалоги:** контекст из `ToastProvider`, подтверждения на Headless UI `Dialog`
+-   **ESLint:** современная flat-конфигурация с правилами хуков
+-   **TypeScript:** строгий режим, `.tsx` файлы, алиасы по слоям
+-   **Vitest:** jsdom-окружение
+-   **Хранение:** LocalStorage через `~shared/lib/storage` (без бэкенда)
 
-## Project-Specific Conventions
+## Специфические договорённости
 
--   **FSD Layer Rules:**
-    -   Keep entity logic in the appropriate `~entities/*/lib`
-    -   UI interactions in `~features/*`
-    -   Composite blocks in `~widgets/*`
-    -   App routing configured in `~app/App.tsx` (RouterProvider for `/` и `/share`)
-    -   Shared utilities (calculations, storage, sharing adapters) live in `~shared/lib`
--   **ID Generation:** Use `createPerson()` from `~entities/person` and `generateSessionId()` from `~entities/session`
--   **Type Safety:**
-    -   Import types with `import type { Person } from '~entities/person'`
-    -   Session types/utilities are re-exported from `~entities/session`
-    -   Use proper FSD aliases for all imports
--   **Calculations:**
-    -   All business calculations in `~shared/lib/calculations`
-    -   Parse expenses with `parseFloat(person.expenses) || 0` for safety
-    -   Round monetary values: `Math.round(value * 100) / 100`
+-   **Слои FSD:**
+    -   Логика сущностей — в `~entities/*/lib`
+    -   Пользовательские действия — в `~features/*`
+    -   Композитный UI — в `~widgets/*`
+    -   Роутинг — в `~app/App.tsx`
+    -   Общие утилиты (расчёты, storage, sharing) — в `~shared/lib`
+-   **Генерация ID:** `createPerson()` (person) и `generateSessionId()` (session)
+-   **Типобезопасность:**
+    -   Типы импортируются через `import type {...}
+    -   Повторно используемые типы сессий — в `~entities/session`
+    -   Следите, чтобы импорты шли по алиасам
+-   **Расчёты:**
+    -   Бизнес-логика — `~shared/lib/calculations`
+    -   Парсинг сумм: `parseFloat(person.expenses) || 0`
+    -   Округление: `Math.round(value * 100) / 100`
 -   **Persistence:**
-    -   Leverage `storage` helpers from `~shared/lib/storage` (re-exported through `~shared/lib`)
-    -   Convert `createdAt` / `updatedAt` fields back to `Date` when rehydrating sessions
-    -   Avoid direct `localStorage` usage outside storage helper module
-    -   Sharing helpers (`createShareUrl`, `decodeSessionFromShare`) live in `~shared/lib/share`
--   **User Feedback:**
-    -   Не используйте `alert` / `prompt` / `confirm`; вместо этого применяйте `useToast` и Headless UI `Dialog`
-    -   Для подтверждения действий (удаление сессии, новая сессия) используйте `ConfirmDialog`
-    -   Для ошибок копирования ссылок предусмотрен fallback-модал с ручным копированием
--   **PWA Assets:** Keep `public/icon.svg`, `public/favicon.svg`, and generated PNG variants in sync with `vite.config.js`
+    -   Используйте `storage` из `~shared/lib/storage`
+    -   При восстановлении сессий возвращайте даты к `Date`
+    -   Напрямую с `localStorage` не работаем
+    -   Шаринг (`createShareUrl`, `decodeSessionFromShare`) — в `~shared/lib/share`
+-   **Обратная связь:**
+    -   Не используйте `alert`/`prompt`/`confirm`; вместо этого `useToast` + Headless UI `Dialog`
+    -   Для подтверждений (удаление, новая сессия) — `ConfirmDialog`
+    -   При ошибке копирования ссылки — fallback-модал с ручным копированием
+-   **PWA-ассеты:** держите `public/icon.svg`, `public/favicon.svg` и PNG-версии согласованными с `vite.config.js`
 
-## Code Examples
+## Примеры кода
 
--   **Adding new calculation feature:**
+-   **Новая функция расчёта:**
 
     ```typescript
-    // Add to shared/lib/calculations.ts
+    // Добавить в shared/lib/calculations.ts
     export const calculateTotalDebt = (people: Person[]) => {
         return people.filter((p) => p.duty > 0).reduce((sum, p) => sum + p.duty, 0);
     };
     ```
 
--   **Creating new widget:**
+-   **Новый виджет:**
 
     ```typescript
     // src/widgets/expense-stats/ui/ExpenseStats.tsx
@@ -160,17 +159,17 @@ This is "Raspil" - a React expense calculator app built with Vite, TypeScript, a
     };
     ```
 
--   **Adding new feature:**
+-   **Структура новой feature:**
 
     ```
     src/features/calculate-duties/
     ├── ui/
-    │   └── CalculateDutiesButton.tsx    // UI component
-    ├── model/                           // Business logic (if needed)
-    └── index.ts                         // Public API export
+    │   └── CalculateDutiesButton.tsx    // UI-компонент
+    ├── model/                           // При необходимости бизнес-логика
+    └── index.ts                         // Экспорт публичного API
     ```
 
--   **Saving a named session:**
+-   **Сохранение именованной сессии:**
 
     ```typescript
     import type { Session } from '~entities/session';
@@ -189,7 +188,7 @@ This is "Raspil" - a React expense calculator app built with Vite, TypeScript, a
     };
     ```
 
--   **Sharing a session link:**
+-   **Поделиться ссылкой:**
 
     ```typescript
     import { createShareUrl } from '~shared/lib';
@@ -200,22 +199,22 @@ This is "Raspil" - a React expense calculator app built with Vite, TypeScript, a
     };
     ```
 
-## Key Files & Dependencies
+## Ключевые файлы и зависимости
 
--   **Entry Point:** `src/main.jsx` → `~app/main.tsx`
--   **Root Component:** `~app/App.tsx` — RouterProvider wiring для `/` и `/share`
--   **Home Screen:** `~pages/home/ui/HomePage.tsx` — Основная логика калькулятора и состояние
--   **Share Screen:** `~pages/share-session/ui/ShareSessionPage.tsx` — Импорт расчета по ссылке
--   **Core Entities:**
-    -   `~entities/person/model/types.ts` — Person interface
-    -   `~entities/session/model/types.ts` — Session interface & metadata helpers
--   **Calculations:** `~shared/lib/calculations.ts` — Business logic
--   **Persistence:** `~shared/lib/storage.ts` — LocalStorage helpers for sessions/backups
--   **Sharing:** `~shared/lib/share.ts` — Кодирование/декодирование расчетов и генерация ссылок
--   **Session UI:** `~widgets/session-controls/SessionControls.tsx` — Кнопки управления и мобильное меню
--   **Config:** `vite.config.js` — Build configuration with FSD aliases
--   **Dependencies:** React 19, React Router 7.9, Vite 7.1, TypeScript, Tailwind 4.1, Lucide icons
+-   **Вход:** `src/main.jsx` → `~app/main.tsx`
+-   **Корневой компонент:** `~app/App.tsx` — RouterProvider для `/` и `/share`
+-   **Главная страница:** `~pages/home/ui/HomePage.tsx`
+-   **Страница импорта:** `~pages/share-session/ui/ShareSessionPage.tsx`
+-   **Сущности:**
+    -   `~entities/person/model/types.ts`
+    -   `~entities/session/model/types.ts`
+-   **Расчёты:** `~shared/lib/calculations.ts`
+-   **Хранение:** `~shared/lib/storage.ts`
+-   **Шаринг:** `~shared/lib/share.ts`
+-   **UI-панель сессий:** `~widgets/session-controls/SessionControls.tsx`
+-   **Конфиг:** `vite.config.js`
+-   **Библиотеки:** React 19, React Router 7.9, Vite 7.1, TypeScript, Tailwind 4.1, Lucide Icons
 
 ---
 
-If any conventions or workflows are unclear or missing, please provide feedback to improve these instructions.
+Если какие-то соглашения неочевидны или требуют уточнения, дайте знать — расширим инструкцию.
