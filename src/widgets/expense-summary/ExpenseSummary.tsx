@@ -21,29 +21,33 @@ export const ExpenseSummary: React.FC<ExpenseSummaryProps> = ({ people, totalExp
 
     // Оптимальные переводы между участниками
     const calculateOptimalTransfers = (): DebtorCreditorPair[] => {
-        const sortedDebts = [...debts].sort((a, b) => b.duty - a.duty);
-        const sortedCredits = [...credits].sort((a, b) => a.duty - b.duty);
+        const debtorQueue = debts
+            .map((person) => ({ person, remaining: person.duty }))
+            .sort((a, b) => b.remaining - a.remaining);
+        const creditorQueue = credits
+            .map((person) => ({ person, remaining: Math.abs(person.duty) }))
+            .sort((a, b) => b.remaining - a.remaining);
 
         const transfers: DebtorCreditorPair[] = [];
         let debtIndex = 0;
         let creditIndex = 0;
 
-        while (debtIndex < sortedDebts.length && creditIndex < sortedCredits.length) {
-            const debtor = sortedDebts[debtIndex];
-            const creditor = sortedCredits[creditIndex];
+        while (debtIndex < debtorQueue.length && creditIndex < creditorQueue.length) {
+            const debtor = debtorQueue[debtIndex];
+            const creditor = creditorQueue[creditIndex];
 
-            const amount = Math.min(debtor.duty, Math.abs(creditor.duty));
+            const amount = Math.min(debtor.remaining, creditor.remaining);
 
             if (amount > 0.01) {
                 // Игнорируем копейки
-                transfers.push({ debtor, creditor, amount });
+                transfers.push({ debtor: debtor.person, creditor: creditor.person, amount });
             }
 
-            debtor.duty -= amount;
-            creditor.duty += amount;
+            debtor.remaining -= amount;
+            creditor.remaining -= amount;
 
-            if (debtor.duty < 0.01) debtIndex++;
-            if (Math.abs(creditor.duty) < 0.01) creditIndex++;
+            if (debtor.remaining <= 0.01) debtIndex++;
+            if (creditor.remaining <= 0.01) creditIndex++;
         }
 
         return transfers;
