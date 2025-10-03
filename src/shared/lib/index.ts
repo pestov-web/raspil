@@ -4,3 +4,5 @@ export { createShareUrl, encodeSessionForShare, decodeSessionFromShare, SHARE_QU
 export { exportSessionAsCsv, exportSessionAsPdf } from './export';
 export * from './validation';
 export * from './theme';
+export { default as i18n, changeLanguage, SUPPORTED_LANGUAGES } from './i18n';
+export type { SupportedLanguage } from './i18n';

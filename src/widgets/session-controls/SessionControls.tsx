@@ -12,6 +12,7 @@ import {
     FileSpreadsheet,
     ChevronDown,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface SessionControlsProps {
     onOpenManager: () => void;
@@ -33,6 +34,7 @@ export const SessionControls = ({
     onExportPdf,
 }: SessionControlsProps) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const { t } = useTranslation();
 
     const runAction = async (action: () => void | Promise<void>, onComplete?: () => void) => {
         try {
@@ -49,7 +51,7 @@ export const SessionControls = ({
                     {({ close }) => (
                         <>
                             <Popover.Button className='flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600'>
-                                Сессия
+                                {t('actions.sessionMenu')}
                                 <ChevronDown size={16} className='opacity-80' />
                             </Popover.Button>
                             <Transition
@@ -67,21 +69,21 @@ export const SessionControls = ({
                                         className='flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-purple-700 transition hover:bg-purple-50 dark:text-purple-200 dark:hover:bg-purple-900/40'
                                     >
                                         <Settings2 size={16} />
-                                        Управление сессиями
+                                        {t('actions.manageSessions')}
                                     </button>
                                     <button
                                         onClick={() => runAction(onSaveSession, close)}
                                         className='flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-blue-700 transition hover:bg-blue-50 dark:text-blue-200 dark:hover:bg-blue-900/40'
                                     >
                                         <Save size={16} />
-                                        Сохранить сессию
+                                        {t('actions.saveSession')}
                                     </button>
                                     <button
                                         onClick={() => runAction(onNewSession, close)}
                                         className='flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-green-700 transition hover:bg-green-50 dark:text-emerald-200 dark:hover:bg-emerald-900/40'
                                     >
                                         <PlusCircle size={16} />
-                                        Новая сессия
+                                        {t('actions.newSession')}
                                     </button>
                                 </Popover.Panel>
                             </Transition>
@@ -93,7 +95,7 @@ export const SessionControls = ({
                     {({ close }) => (
                         <>
                             <Popover.Button className='flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600'>
-                                Экспорт & шаринг
+                                {t('actions.exportMenu')}
                                 <ChevronDown size={16} className='opacity-80' />
                             </Popover.Button>
                             <Transition
@@ -111,14 +113,14 @@ export const SessionControls = ({
                                         className='flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-amber-700 transition hover:bg-amber-50 dark:text-amber-200 dark:hover:bg-amber-900/40'
                                     >
                                         <Share2 size={16} />
-                                        Поделиться ссылкой
+                                        {t('actions.shareLink')}
                                     </button>
                                     <button
                                         onClick={() => runAction(onShowShareQr, close)}
                                         className='flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-indigo-700 transition hover:bg-indigo-50 dark:text-indigo-200 dark:hover:bg-indigo-900/40'
                                     >
                                         <QrCode size={16} />
-                                        Показать QR-код
+                                        {t('actions.showQr')}
                                     </button>
                                     <div className='my-1 h-px bg-slate-200 dark:bg-slate-700' />
                                     <button
@@ -126,14 +128,14 @@ export const SessionControls = ({
                                         className='flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/40'
                                     >
                                         <FileDown size={16} />
-                                        Экспорт в PDF
+                                        {t('actions.exportPdf')}
                                     </button>
                                     <button
                                         onClick={() => runAction(onExportCsv, close)}
                                         className='flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/40'
                                     >
                                         <FileSpreadsheet size={16} />
-                                        Экспорт в CSV
+                                        {t('actions.exportCsv')}
                                     </button>
                                 </Popover.Panel>
                             </Transition>
@@ -146,7 +148,7 @@ export const SessionControls = ({
                 <button
                     onClick={() => setIsMobileMenuOpen(true)}
                     className='p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors dark:bg-indigo-500 dark:hover:bg-indigo-600'
-                    aria-label='Меню действий'
+                    aria-label={t('actions.openMenu')}
                 >
                     <Menu size={20} />
                 </button>
@@ -179,12 +181,12 @@ export const SessionControls = ({
                             <Dialog.Panel className='w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl transition-colors dark:bg-slate-900 dark:text-slate-100'>
                                 <div className='flex items-center justify-between mb-4'>
                                     <Dialog.Title className='text-lg font-semibold text-gray-800 dark:text-slate-100'>
-                                        Действия
+                                        {t('actions.menuTitle')}
                                     </Dialog.Title>
                                     <button
                                         onClick={() => setIsMobileMenuOpen(false)}
                                         className='rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 dark:text-slate-400 dark:hover:bg-slate-800'
-                                        aria-label='Закрыть меню'
+                                        aria-label={t('actions.closeMenu')}
                                     >
                                         <X size={18} />
                                     </button>
@@ -196,49 +198,49 @@ export const SessionControls = ({
                                         className='flex w-full items-center gap-3 rounded-xl bg-purple-50 px-4 py-3 text-purple-700 transition-colors hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-200 dark:hover:bg-purple-900/50'
                                     >
                                         <Settings2 size={18} />
-                                        Управление сессиями
+                                        {t('actions.manageSessions')}
                                     </button>
                                     <button
                                         onClick={() => runAction(onSaveSession, () => setIsMobileMenuOpen(false))}
                                         className='flex w-full items-center gap-3 rounded-xl bg-blue-50 px-4 py-3 text-blue-700 transition-colors hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:hover:bg-blue-900/50'
                                     >
                                         <Save size={18} />
-                                        Сохранить сессию
+                                        {t('actions.saveSession')}
                                     </button>
                                     <button
                                         onClick={() => runAction(onNewSession, () => setIsMobileMenuOpen(false))}
                                         className='flex w-full items-center gap-3 rounded-xl bg-green-50 px-4 py-3 text-green-700 transition-colors hover:bg-green-100 dark:bg-emerald-900/30 dark:text-emerald-200 dark:hover:bg-emerald-900/50'
                                     >
                                         <PlusCircle size={18} />
-                                        Новая сессия
+                                        {t('actions.newSession')}
                                     </button>
                                     <button
                                         onClick={() => runAction(onShareSession, () => setIsMobileMenuOpen(false))}
                                         className='flex w-full items-center gap-3 rounded-xl bg-amber-50 px-4 py-3 text-amber-700 transition-colors hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-200 dark:hover:bg-amber-900/50'
                                     >
                                         <Share2 size={18} />
-                                        Поделиться ссылкой
+                                        {t('actions.shareLink')}
                                     </button>
                                     <button
                                         onClick={() => runAction(onShowShareQr, () => setIsMobileMenuOpen(false))}
                                         className='flex w-full items-center gap-3 rounded-xl bg-indigo-50 px-4 py-3 text-indigo-700 transition-colors hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-200 dark:hover:bg-indigo-900/50'
                                     >
                                         <QrCode size={18} />
-                                        Показать QR
+                                        {t('actions.showQrShort')}
                                     </button>
                                     <button
                                         onClick={() => runAction(onExportPdf, () => setIsMobileMenuOpen(false))}
                                         className='flex w-full items-center gap-3 rounded-xl bg-slate-100 px-4 py-3 text-slate-700 transition-colors hover:bg-slate-200 dark:bg-slate-800/40 dark:text-slate-200 dark:hover:bg-slate-800/60'
                                     >
                                         <FileDown size={18} />
-                                        Экспорт в PDF
+                                        {t('actions.exportPdf')}
                                     </button>
                                     <button
                                         onClick={() => runAction(onExportCsv, () => setIsMobileMenuOpen(false))}
                                         className='flex w-full items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 text-slate-700 transition-colors hover:bg-slate-100 dark:bg-slate-800/30 dark:text-slate-200 dark:hover:bg-slate-800/50'
                                     >
                                         <FileSpreadsheet size={18} />
-                                        Экспорт в CSV
+                                        {t('actions.exportCsv')}
                                     </button>
                                 </div>
                             </Dialog.Panel>

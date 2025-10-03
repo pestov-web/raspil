@@ -1,5 +1,6 @@
 import React from 'react';
 import { Calculator } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface CalculateDutiesButtonProps {
     onCalculate: () => void;
@@ -12,6 +13,8 @@ export const CalculateDutiesButton: React.FC<CalculateDutiesButtonProps> = ({
     className = '',
     disabled = false,
 }) => {
+    const { t } = useTranslation('translation', { keyPrefix: 'people' });
+
     return (
         <button
             onClick={onCalculate}
@@ -22,7 +25,7 @@ export const CalculateDutiesButton: React.FC<CalculateDutiesButtonProps> = ({
             } ${className}`}
         >
             <Calculator size={20} />
-            Рассчитать
+            {t('calculate')}
         </button>
     );
 };

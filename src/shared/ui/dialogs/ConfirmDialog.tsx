@@ -1,5 +1,6 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface ConfirmDialogProps {
     open: boolean;
@@ -16,12 +17,15 @@ export const ConfirmDialog = ({
     open,
     title,
     description,
-    confirmText = 'Подтвердить',
-    cancelText = 'Отмена',
+    confirmText,
+    cancelText,
     tone = 'default',
     onConfirm,
     onClose,
 }: ConfirmDialogProps) => {
+    const { t } = useTranslation();
+    const confirmLabel = confirmText ?? t('common.confirm');
+    const cancelLabel = cancelText ?? t('common.cancel');
     const confirmClasses =
         tone === 'danger'
             ? 'bg-red-600 hover:bg-red-700 focus-visible:ring-red-500 dark:bg-red-500 dark:hover:bg-red-600 dark:focus-visible:ring-red-400'
@@ -70,14 +74,14 @@ export const ConfirmDialog = ({
                                         onClick={onClose}
                                         className='inline-flex justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-slate-900'
                                     >
-                                        {cancelText}
+                                        {cancelLabel}
                                     </button>
                                     <button
                                         type='button'
                                         onClick={onConfirm}
                                         className={`inline-flex justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 ${confirmClasses}`}
                                     >
-                                        {confirmText}
+                                        {confirmLabel}
                                     </button>
                                 </div>
                             </Dialog.Panel>

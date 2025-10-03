@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Trash2, Download, Upload, Calendar, Users, DollarSign } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { SessionMetadata } from '~entities/session';
 import { formatSessionDate } from '~entities/session';
 import { storage } from '~shared/lib/storage';
@@ -22,6 +23,7 @@ export const SessionManagerModal: React.FC<SessionManagerModalProps> = ({
     const [loading, setLoading] = useState(false);
     const [pendingDelete, setPendingDelete] = useState<SessionMetadata | null>(null);
     const toast = useToast();
+    const { t } = useTranslation();
 
     useEffect(() => {
         if (isOpen) {
@@ -69,13 +71,13 @@ export const SessionManagerModal: React.FC<SessionManagerModalProps> = ({
                 const result = storage.importData(importData);
 
                 if (result.success) {
-                    toast.success(`Импортировано ${result.imported} сессий`);
+                    toast.success(t('success.import', { count: result.imported }));
                     loadSessions();
                 } else {
-                    toast.error(`Ошибка импорта: ${result.errors.join(', ')}`);
+                    toast.error(t('errors.importFailed', { message: result.errors.join(', ') }));
                 }
             } catch (error) {
-                toast.error('Не удалось прочитать файл. Проверьте формат и попробуйте снова.');
+                toast.error(t('errors.importRead'));
                 console.error('Import failed:', error);
             }
         };
@@ -93,13 +95,15 @@ export const SessionManagerModal: React.FC<SessionManagerModalProps> = ({
 
         onDeleteSession(pendingDelete.id);
         setSessions((prev) => prev.filter((s) => s.id !== pendingDelete.id));
-        toast.success(`Сессия "${pendingDelete.name}" удалена`);
+        toast.success(t('sessionManager.deleteSuccess', { name: pendingDelete.name }));
         setPendingDelete(null);
     };
 
     const cancelDelete = () => {
         setPendingDelete(null);
     };
+
+    const deleteName = pendingDelete?.name?.trim() || t('common.unnamedSession');
 
     if (!isOpen) return null;
 
@@ -109,7 +113,9 @@ export const SessionManagerModal: React.FC<SessionManagerModalProps> = ({
                 <div className='max-h-[80vh] w-full max-w-4xl overflow-hidden rounded-2xl border border-transparent bg-white shadow-xl transition-colors dark:border-slate-800 dark:bg-slate-900'>
                     {/* Header */}
                     <div className='flex items-center justify-between border-b border-gray-200 p-6 dark:border-slate-800'>
-                        <h2 className='text-2xl font-bold text-gray-800 dark:text-slate-100'>Управление сессиями</h2>
+                        <h2 className='text-2xl font-bold text-gray-800 dark:text-slate-100'>
+                            {t('sessionManager.title')}
+                        </h2>
                         <button
                             onClick={onClose}
                             className='rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 dark:text-slate-400 dark:hover:bg-slate-800'
@@ -125,17 +131,17 @@ export const SessionManagerModal: React.FC<SessionManagerModalProps> = ({
                             className='flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-white transition-colors hover:bg-green-700'
                         >
                             <Download size={18} />
-                            Экспорт всех
+                            {t('sessionManager.exportAll')}
                         </button>
 
                         <label className='flex cursor-pointer items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700'>
                             <Upload size={18} />
-                            Импорт
+                            {t('sessionManager.import')}
                             <input type='file' accept='.json' onChange={handleImport} className='hidden' />
                         </label>
 
                         <div className='ml-auto text-sm text-gray-600 dark:text-slate-300'>
-                            Сессий: {sessions.length}
+                            {t('sessionManager.count', { count: sessions.length })}
                         </div>
                     </div>
 
@@ -143,13 +149,15 @@ export const SessionManagerModal: React.FC<SessionManagerModalProps> = ({
                     <div className='max-h-96 overflow-y-auto p-6'>
                         {loading ? (
                             <div className='py-8 text-center'>
-                                <div className='text-gray-500 dark:text-slate-400'>Загрузка сессий...</div>
+                                <div className='text-gray-500 dark:text-slate-400'>{t('sessionManager.loading')}</div>
                             </div>
                         ) : sessions.length === 0 ? (
                             <div className='py-8 text-center'>
-                                <div className='mb-4 text-gray-500 dark:text-slate-400'>Нет сохраненных сессий</div>
+                                <div className='mb-4 text-gray-500 dark:text-slate-400'>
+                                    {t('sessionManager.emptyTitle')}
+                                </div>
                                 <div className='text-sm text-gray-400 dark:text-slate-500'>
-                                    Создайте расчет и сохраните его как сессию
+                                    {t('sessionManager.emptyDescription')}
                                 </div>
                             </div>
                         ) : (
@@ -178,7 +186,9 @@ export const SessionManagerModal: React.FC<SessionManagerModalProps> = ({
                                                     </div>
                                                     <div className='flex items-center gap-1'>
                                                         <Users size={14} />
-                                                        {session.peopleCount} чел.
+                                                        {t('sessionManager.peopleCount', {
+                                                            count: session.peopleCount,
+                                                        })}
                                                     </div>
                                                     <div className='flex items-center gap-1'>
                                                         <DollarSign size={14} />
@@ -192,7 +202,7 @@ export const SessionManagerModal: React.FC<SessionManagerModalProps> = ({
                                                     onClick={() => onLoadSession(session.id)}
                                                     className='rounded-lg bg-indigo-600 px-4 py-2 text-white transition-colors hover:bg-indigo-700'
                                                 >
-                                                    Загрузить
+                                                    {t('sessionManager.load')}
                                                 </button>
                                                 <button
                                                     onClick={() => requestDelete(session)}
@@ -214,9 +224,10 @@ export const SessionManagerModal: React.FC<SessionManagerModalProps> = ({
                 open={Boolean(pendingDelete)}
                 onClose={cancelDelete}
                 onConfirm={confirmDelete}
-                title={pendingDelete ? `Удалить сессию "${pendingDelete.name}"?` : 'Удалить сессию?'}
-                description='Это действие нельзя отменить.'
-                confirmText='Удалить'
+                title={t('sessionManager.deleteConfirmTitle', { name: deleteName })}
+                description={t('sessionManager.deleteConfirmDescription')}
+                confirmText={t('sessionManager.deleteConfirmAction')}
+                cancelText={t('common.cancel')}
                 tone='danger'
             />
         </>

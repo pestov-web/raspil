@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import '~shared/lib/i18n';
 import { SHARE_QUERY_PARAM } from '~shared/lib';
 import '~shared/styles/index.css';
 import { App } from './App';

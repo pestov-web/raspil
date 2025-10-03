@@ -3,6 +3,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { Users } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
+import { useTranslation } from 'react-i18next';
 import type { Person } from '~entities/person';
 import { createPerson } from '~entities/person';
 import type { Session } from '~entities/session';
@@ -26,10 +27,12 @@ import { SessionControls } from '~widgets/session-controls';
 import { SessionManagerModal } from '~widgets/session-manager';
 import { useToast, ConfirmDialog } from '~shared/ui';
 import { ThemeToggle } from '~features/toggle-theme';
+import { LanguageToggle } from '~features/toggle-language';
 
 export const HomePage = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [people, setPeople] = useState<Person[]>([{ id: 1, name: '', expenses: '', duty: 0 }]);
     useEffect(() => {
         if (location.pathname !== '/') {
@@ -63,14 +66,16 @@ export const HomePage = () => {
         if (savedSession) {
             setCurrentSession(savedSession);
             setPeople(savedSession.people);
-        } else {
-            const newSession = createSession({
-                name: 'Текущий расчет',
-                description: 'Автоматически сохраненная сессия',
-            });
-            setCurrentSession(newSession);
+            return;
         }
-    }, []);
+
+        const newSession = createSession({
+            name: t('currentSession.name'),
+            description: t('currentSession.description'),
+        });
+        setCurrentSession(newSession);
+        setPeople(newSession.people);
+    }, [t]);
 
     useEffect(() => {
         setCurrentSession((previous) => {
@@ -112,7 +117,7 @@ export const HomePage = () => {
 
     const handleCalculateDuties = () => {
         if (hasInvalidExpenses) {
-            toast.error('Исправьте ошибки в суммах, чтобы выполнить расчет');
+            toast.error(t('errors.invalidExpenses'));
             return;
         }
         const updatedPeople = calculateDuties(people);
@@ -129,7 +134,7 @@ export const HomePage = () => {
         if (!currentSession) return;
         const name = sessionNameDraft.trim();
         if (!name) {
-            toast.error('Введите название сессии');
+            toast.error(t('save.nameRequired'));
             return;
         }
 
@@ -142,7 +147,7 @@ export const HomePage = () => {
         storage.saveNamedSession(sessionToSave);
         setCurrentSession(sessionToSave);
         setSessionNameDraft(name);
-        toast.success('Сессия сохранена');
+        toast.success(t('save.success'));
         setSaveDialogOpen(false);
     };
 
@@ -154,7 +159,7 @@ export const HomePage = () => {
             setCurrentSession(sessionToLoad);
             setPeople(sessionToLoad.people);
             setShowSessionManager(false);
-            toast.success(`Сессия "${sessionToLoad.name}" загружена`);
+            toast.success(t('load.success', { name: sessionToLoad.name }));
         }
     };
 
@@ -168,15 +173,15 @@ export const HomePage = () => {
 
     const confirmNewSession = () => {
         const newSession = createSession({
-            name: 'Новый расчет',
-            description: 'Автоматически созданная сессия',
+            name: t('newSession.name'),
+            description: t('newSession.description'),
             people: [{ id: 1, name: '', expenses: '', duty: 0 }],
         });
 
         setCurrentSession(newSession);
         setPeople(newSession.people);
         setNewSessionConfirmOpen(false);
-        toast.info('Создана новая сессия');
+        toast.info(t('newSession.created'));
     };
 
     const cancelNewSession = () => {
@@ -213,16 +218,19 @@ export const HomePage = () => {
         }
 
         const { shareUrl, total, perPersonShare } = shareContext;
-        const summary = `Общие расходы: ${total.toFixed(2)} ₽\nНа каждого: ${perPersonShare.toFixed(2)} ₽`;
+        const summary = t('share.summary', {
+            total: total.toFixed(2),
+            perPerson: perPersonShare.toFixed(2),
+        });
 
         if (navigator.share) {
             try {
                 await navigator.share({
-                    title: shareContext.session.name || 'Распил расходов',
+                    title: shareContext.session.name || t('share.title'),
                     text: summary,
                     url: shareUrl,
                 });
-                toast.success('Ссылка на расчет отправлена через системное меню');
+                toast.success(t('share.menuSuccess'));
                 return;
             } catch (error) {
                 console.warn('Web Share API failed, fallback to clipboard.', error);
@@ -231,12 +239,12 @@ export const HomePage = () => {
 
         try {
             await navigator.clipboard.writeText(shareUrl);
-            toast.success('Ссылка на расчет скопирована в буфер обмена');
+            toast.success(t('share.clipboardSuccess'));
         } catch (error) {
             console.error('Failed to copy share link:', error);
             setShareDialogLink(shareUrl);
             setShareDialogOpen(true);
-            toast.error('Не удалось скопировать ссылку автоматически. Скопируйте ссылку вручную.');
+            toast.error(t('share.clipboardError'));
         }
     };
 
@@ -253,7 +261,7 @@ export const HomePage = () => {
     const handleExportCsv = () => {
         const shareContext = syncSessionForShare();
         if (!shareContext) {
-            toast.error('Сначала добавьте участников для экспорта');
+            toast.error(t('errors.exportNoPeople'));
             return;
         }
 
@@ -264,17 +272,17 @@ export const HomePage = () => {
                 totalExpenses: shareContext.total,
                 perPersonShare: shareContext.perPersonShare,
             });
-            toast.success('CSV-файл сохранен');
+            toast.success(t('success.exportCsv'));
         } catch (error) {
             console.error('Failed to export CSV:', error);
-            toast.error('Не удалось экспортировать CSV. Попробуйте ещё раз.');
+            toast.error(t('errors.exportCsv'));
         }
     };
 
     const handleExportPdf = () => {
         const shareContext = syncSessionForShare();
         if (!shareContext) {
-            toast.error('Сначала добавьте участников для экспорта');
+            toast.error(t('errors.exportNoPeople'));
             return;
         }
 
@@ -285,10 +293,10 @@ export const HomePage = () => {
                 totalExpenses: shareContext.total,
                 perPersonShare: shareContext.perPersonShare,
             });
-            toast.success('PDF-файл сохранен');
+            toast.success(t('success.exportPdf'));
         } catch (error) {
             console.error('Failed to export PDF:', error);
-            toast.error('Не удалось экспортировать PDF. Попробуйте ещё раз.');
+            toast.error(t('errors.exportPdf'));
         }
     };
 
@@ -306,11 +314,11 @@ export const HomePage = () => {
         if (!shareDialogLink) return;
         try {
             await navigator.clipboard.writeText(shareDialogLink);
-            toast.success('Ссылка скопирована в буфер обмена');
+            toast.success(t('share.dialogCopySuccess'));
             closeShareDialog();
         } catch (error) {
             console.error('Failed to copy share link from dialog:', error);
-            toast.error('Не удалось скопировать ссылку. Попробуйте вручную.');
+            toast.error(t('share.dialogCopyError'));
         }
     };
 
@@ -323,14 +331,15 @@ export const HomePage = () => {
                 <div className='flex items-center gap-3'>
                     <Users className='text-indigo-600 dark:text-indigo-400' size={32} />
                     <div>
-                        <h1 className='text-2xl font-bold text-gray-800 dark:text-slate-100'>Калькулятор расходов</h1>
-                        <p className='text-sm text-gray-600 dark:text-slate-400'>
-                            Простой способ честно разделить общие траты
-                        </p>
+                        <h1 className='text-2xl font-bold text-gray-800 dark:text-slate-100'>{t('app.title')}</h1>
+                        <p className='text-sm text-gray-600 dark:text-slate-400'>{t('app.subtitle')}</p>
                     </div>
                 </div>
 
-                <ThemeToggle className='w-full justify-center md:w-auto' />
+                <div className='flex w-full flex-col gap-2 md:w-auto md:flex-row'>
+                    <LanguageToggle className='w-full justify-center md:w-auto' />
+                    <ThemeToggle className='w-full justify-center md:w-auto' />
+                </div>
             </header>
 
             <div className='mx-auto max-w-4xl text-gray-900 transition-colors dark:text-slate-100'>
@@ -339,11 +348,13 @@ export const HomePage = () => {
                         {currentSession && (
                             <div className='flex items-start justify-between gap-3 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-600 transition-colors dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-300 md:flex-1'>
                                 <div>
-                                    <p className='font-medium text-gray-800 dark:text-slate-100'>Текущая сессия</p>
+                                    <p className='font-medium text-gray-800 dark:text-slate-100'>
+                                        {t('app.currentSession')}
+                                    </p>
                                     <p className='text-sm'>{currentSession.name}</p>
                                 </div>
                                 <span className='rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-200'>
-                                    Черновик сохраняется автоматически
+                                    {t('app.autoSaveBadge')}
                                 </span>
                             </div>
                         )}
@@ -408,10 +419,10 @@ export const HomePage = () => {
                         >
                             <Dialog.Panel className='w-full max-w-md rounded-2xl bg-white p-6 shadow-xl transition-colors dark:border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100'>
                                 <Dialog.Title className='text-lg font-semibold text-gray-900 dark:text-slate-100'>
-                                    Сохранить сессию
+                                    {t('dialogs.saveSession.title')}
                                 </Dialog.Title>
                                 <Dialog.Description className='mt-2 text-sm text-gray-600 dark:text-slate-400'>
-                                    Укажите понятное название, чтобы потом легко найти расчет.
+                                    {t('dialogs.saveSession.description')}
                                 </Dialog.Description>
 
                                 <form
@@ -426,14 +437,14 @@ export const HomePage = () => {
                                             htmlFor='session-name'
                                             className='text-sm font-medium text-gray-700 dark:text-slate-300'
                                         >
-                                            Название сессии
+                                            {t('dialogs.saveSession.nameLabel')}
                                         </label>
                                         <input
                                             id='session-name'
                                             value={sessionNameDraft}
                                             onChange={(event) => setSessionNameDraft(event.target.value)}
                                             className='mt-2 w-full rounded-xl border border-gray-200 px-3 py-2 text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100'
-                                            placeholder='Например, Поездка в Казань'
+                                            placeholder={t('dialogs.saveSession.namePlaceholder')}
                                             autoFocus
                                         />
                                     </div>
@@ -444,13 +455,13 @@ export const HomePage = () => {
                                             onClick={() => setSaveDialogOpen(false)}
                                             className='rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
                                         >
-                                            Отмена
+                                            {t('common.cancel')}
                                         </button>
                                         <button
                                             type='submit'
                                             className='rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700'
                                         >
-                                            Сохранить
+                                            {t('common.save')}
                                         </button>
                                     </div>
                                 </form>
@@ -464,9 +475,10 @@ export const HomePage = () => {
                 open={isNewSessionConfirmOpen}
                 onClose={cancelNewSession}
                 onConfirm={confirmNewSession}
-                title='Создать новую сессию?'
-                description='Текущий расчет сохранится автоматически, и вы начнете с чистого листа.'
-                confirmText='Создать'
+                title={t('dialogs.newSession.title')}
+                description={t('dialogs.newSession.description')}
+                confirmText={t('dialogs.newSession.confirm')}
+                cancelText={t('common.cancel')}
             />
 
             <Transition show={isShareDialogOpen} as={Fragment} appear>
@@ -495,10 +507,10 @@ export const HomePage = () => {
                         >
                             <Dialog.Panel className='w-full max-w-md rounded-2xl bg-white p-6 shadow-xl transition-colors dark:border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100'>
                                 <Dialog.Title className='text-lg font-semibold text-gray-900 dark:text-slate-100'>
-                                    Поделиться расчетом
+                                    {t('dialogs.share.title')}
                                 </Dialog.Title>
                                 <Dialog.Description className='mt-2 text-sm text-gray-600 dark:text-slate-400'>
-                                    Скопируйте ссылку вручную, если автоматическое копирование не сработало.
+                                    {t('dialogs.share.description')}
                                 </Dialog.Description>
 
                                 <div className='mt-4 space-y-4'>
@@ -511,14 +523,14 @@ export const HomePage = () => {
                                             onClick={closeShareDialog}
                                             className='rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
                                         >
-                                            Закрыть
+                                            {t('common.close')}
                                         </button>
                                         <button
                                             type='button'
                                             onClick={handleCopyShareDialogLink}
                                             className='inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700'
                                         >
-                                            Скопировать
+                                            {t('dialogs.share.copy')}
                                         </button>
                                     </div>
                                 </div>
@@ -554,10 +566,10 @@ export const HomePage = () => {
                         >
                             <Dialog.Panel className='w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl transition-colors dark:border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100'>
                                 <Dialog.Title className='text-lg font-semibold text-gray-900 dark:text-slate-100'>
-                                    Поделиться через QR-код
+                                    {t('dialogs.qr.title')}
                                 </Dialog.Title>
                                 <Dialog.Description className='mt-2 text-sm text-gray-600 dark:text-slate-400'>
-                                    Отсканируйте код на другом устройстве, чтобы открыть расчет.
+                                    {t('dialogs.qr.description')}
                                 </Dialog.Description>
 
                                 <div className='mt-6 flex justify-center'>
@@ -567,7 +579,7 @@ export const HomePage = () => {
                                         </div>
                                     ) : (
                                         <p className='text-sm text-gray-500 dark:text-slate-400'>
-                                            Не удалось сформировать QR-код.
+                                            {t('dialogs.qr.generateError')}
                                         </p>
                                     )}
                                 </div>
@@ -582,15 +594,15 @@ export const HomePage = () => {
                                             if (!qrShareLink) return;
                                             void navigator.clipboard
                                                 .writeText(qrShareLink)
-                                                .then(() => toast.success('Ссылка скопирована'))
+                                                .then(() => toast.success(t('share.qrCopySuccess')))
                                                 .catch((error) => {
                                                     console.error('Failed to copy QR link:', error);
-                                                    toast.error('Не удалось скопировать ссылку.');
+                                                    toast.error(t('share.qrCopyError'));
                                                 });
                                         }}
                                         className='rounded-xl border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
                                     >
-                                        Скопировать ссылку
+                                        {t('dialogs.qr.copy')}
                                     </button>
                                 </div>
 
@@ -600,7 +612,7 @@ export const HomePage = () => {
                                         onClick={closeQrDialog}
                                         className='rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700'
                                     >
-                                        Закрыть
+                                        {t('common.close')}
                                     </button>
                                 </div>
                             </Dialog.Panel>

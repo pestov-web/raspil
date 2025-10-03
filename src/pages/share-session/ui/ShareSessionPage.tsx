@@ -1,20 +1,23 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, Loader2, TriangleAlert } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { decodeSessionFromShare, SHARE_QUERY_PARAM } from '~shared/lib';
 import { storage } from '~shared/lib/storage';
 
 export const ShareSessionPage = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-    const [message, setMessage] = useState('Подготавливаем расчет...');
+    const [messageKey, setMessageKey] = useState<'loading' | 'success' | 'noData' | 'error'>('loading');
+    const [sessionName, setSessionName] = useState<string | null>(null);
 
     useEffect(() => {
         const encoded = searchParams.get(SHARE_QUERY_PARAM);
         if (!encoded) {
             setStatus('error');
-            setMessage('Не найдено данных для расчета. Убедитесь, что вы открыли корректную ссылку.');
+            setMessageKey('noData');
             return;
         }
 
@@ -23,15 +26,31 @@ export const ShareSessionPage = () => {
             storage.saveCurrentSession(session);
             storage.saveNamedSession(session);
             setStatus('success');
-            setMessage(`Расчет «${session.name}» готов! Перенаправляем на главную...`);
+            setMessageKey('success');
+            setSessionName(session.name);
             const timer = setTimeout(() => navigate('/', { replace: true }), 1500);
             return () => clearTimeout(timer);
         } catch (error) {
             console.error('Failed to decode shared session', error);
             setStatus('error');
-            setMessage('Не удалось распознать ссылку. Проверьте, не была ли она повреждена.');
+            setMessageKey('error');
         }
-    }, [navigate, searchParams]);
+    }, [navigate, searchParams, t]);
+    const message = (() => {
+        switch (messageKey) {
+            case 'success':
+                return t('shareSessionPage.success', {
+                    name: sessionName && sessionName.trim().length > 0 ? sessionName : t('common.unnamedSession'),
+                });
+            case 'noData':
+                return t('shareSessionPage.noData');
+            case 'error':
+                return t('shareSessionPage.error');
+            case 'loading':
+            default:
+                return t('shareSessionPage.loading');
+        }
+    })();
 
     const Icon = status === 'success' ? CheckCircle : status === 'error' ? TriangleAlert : Loader2;
 
@@ -44,14 +63,14 @@ export const ShareSessionPage = () => {
                     }
                     size={48}
                 />
-                <h1 className='text-2xl font-bold text-gray-800'>Импорт расчета</h1>
+                <h1 className='text-2xl font-bold text-gray-800'>{t('shareSessionPage.title')}</h1>
                 <p className='text-gray-600'>{message}</p>
                 {status === 'error' && (
                     <button
                         onClick={() => navigate('/', { replace: true })}
                         className='mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors'
                     >
-                        На главную
+                        {t('shareSessionPage.back')}
                     </button>
                 )}
             </div>

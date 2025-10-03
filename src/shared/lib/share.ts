@@ -1,6 +1,7 @@
 import type { Person } from '~entities/person';
 import type { Session } from '~entities/session';
 import { createSession, updateSession } from '~entities/session';
+import i18n from './i18n';
 
 type SharePersonTuple = [id: number, name: string, expenses: string, duty: number];
 
@@ -97,7 +98,7 @@ const decodePayload = (payload: SessionSharePayload): Session => {
     if ('v' in payload) {
         const people = mapTupleToPeople(payload.s.p);
         const session = createSession({
-            name: payload.s.n || 'Полученный расчет',
+            name: payload.s.n || i18n.t('share.receivedSessionName'),
             description: payload.s.d,
             people,
         });
@@ -109,7 +110,7 @@ const decodePayload = (payload: SessionSharePayload): Session => {
     }
 
     const session = createSession({
-        name: payload.session.name || 'Полученный расчет',
+        name: payload.session.name || i18n.t('share.receivedSessionName'),
         description: payload.session.description,
         people: payload.session.people,
     });

@@ -1,5 +1,5 @@
 import type { Session, SessionInput } from '../model/types';
-import { getTotalExpenses } from '~shared/lib';
+import { getTotalExpenses, i18n } from '~shared/lib';
 
 /**
  * Создает новую сессию
@@ -56,7 +56,8 @@ export const validateSession = (session: Session): boolean => {
  * Форматирует дату для отображения
  */
 export const formatSessionDate = (date: Date): string => {
-    return new Intl.DateTimeFormat('ru-RU', {
+    const locale = i18n.language.startsWith('en') ? 'en-US' : 'ru-RU';
+    return new Intl.DateTimeFormat(locale, {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -72,5 +73,6 @@ export const getSessionSummary = (session: Session): string => {
     const peopleCount = session.people.length;
     const totalExpenses = session.totalExpenses;
 
-    return `${peopleCount} чел., ${totalExpenses.toFixed(2)} ₽`;
+    const peopleLabel = i18n.t('sessionManager.peopleCount', { count: peopleCount });
+    return `${peopleLabel}, ${totalExpenses.toFixed(2)} ₽`;
 };

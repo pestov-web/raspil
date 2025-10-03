@@ -1,5 +1,6 @@
 import { MinusCircle } from 'lucide-react';
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Person } from '~entities/person';
 import { isValidExpenseInput } from '~shared/lib';
 
@@ -10,11 +11,12 @@ interface PeopleTableProps {
 }
 
 export const PeopleTable: React.FC<PeopleTableProps> = ({ people, updatePerson, removePerson }) => {
+    const { t } = useTranslation();
+
     return (
         <div className='space-y-4'>
             {people.map((person, index) => {
                 const isExpenseInvalid = !isValidExpenseInput(person.expenses);
-
                 return (
                     <div
                         key={person.id}
@@ -24,11 +26,11 @@ export const PeopleTable: React.FC<PeopleTableProps> = ({ people, updatePerson, 
                         <div className='grid md:grid-cols-4 gap-4 items-end'>
                             <div>
                                 <label className='mb-2 block text-sm font-medium text-gray-700 dark:text-slate-300'>
-                                    Имя
+                                    {t('people.nameLabel')}
                                 </label>
                                 <input
                                     type='text'
-                                    placeholder='Введите имя'
+                                    placeholder={t('people.namePlaceholder')}
                                     value={person.name}
                                     onChange={(e) => updatePerson(person.id, 'name', e.target.value)}
                                     className='w-full rounded-lg border border-gray-300 px-3 py-2 outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100'
@@ -36,11 +38,11 @@ export const PeopleTable: React.FC<PeopleTableProps> = ({ people, updatePerson, 
                             </div>
                             <div>
                                 <label className='mb-2 block text-sm font-medium text-gray-700 dark:text-slate-300'>
-                                    Потратил
+                                    {t('people.expensesLabel')}
                                 </label>
                                 <input
                                     type='number'
-                                    placeholder='0'
+                                    placeholder={t('people.expensesPlaceholder')}
                                     value={person.expenses}
                                     onChange={(e) => updatePerson(person.id, 'expenses', e.target.value)}
                                     className={`w-full rounded-lg border px-3 py-2 outline-none transition-all focus:ring-2 ${
@@ -51,13 +53,13 @@ export const PeopleTable: React.FC<PeopleTableProps> = ({ people, updatePerson, 
                                 />
                                 {isExpenseInvalid && (
                                     <p className='mt-2 text-sm text-rose-600 dark:text-rose-400'>
-                                        Введите неотрицательное число
+                                        {t('people.expensesError')}
                                     </p>
                                 )}
                             </div>
                             <div>
                                 <label className='mb-2 block text-sm font-medium text-gray-700 dark:text-slate-300'>
-                                    Результат
+                                    {t('people.resultLabel')}
                                 </label>
                                 <div
                                     className={`rounded-lg px-3 py-2 text-center font-semibold ${
@@ -69,10 +71,12 @@ export const PeopleTable: React.FC<PeopleTableProps> = ({ people, updatePerson, 
                                     }`}
                                 >
                                     {person.duty === 0
-                                        ? '0 ₽'
+                                        ? t('people.resultZero')
                                         : person.duty > 0
-                                        ? `Должен: ${person.duty.toFixed(2)} ₽`
-                                        : `Вернуть: ${Math.abs(person.duty).toFixed(2)} ₽`}
+                                        ? t('people.resultDebtor', { amount: person.duty.toFixed(2) })
+                                        : t('people.resultCreditor', {
+                                              amount: Math.abs(person.duty).toFixed(2),
+                                          })}
                                 </div>
                             </div>
                             <div className='flex justify-center'>

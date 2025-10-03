@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 import { ensureRobotoFont } from './pdf-fonts';
 import { calculateTransfers } from './calculations';
+import i18n from './i18n';
 import type { TransferPlan } from './calculations';
 import type { Person } from '~entities/person';
 import type { Session } from '~entities/session';
@@ -52,11 +53,13 @@ const COLORS = {
     success: [22, 163, 74] as RGB,
 };
 
+const t = (key: string, options?: Record<string, unknown>) => i18n.t(key, options) as string;
+
 const formatCurrency = (value: number): string => `${value.toFixed(2)} ₽`;
 
 const ensureBrowser = () => {
     if (typeof window === 'undefined' || typeof document === 'undefined') {
-        throw new Error('Экспорт доступен только в браузере');
+        throw new Error(t('exportDoc.browserOnly'));
     }
 };
 
@@ -85,16 +88,17 @@ const createCsvMatrix = (
     transfers: TransferPlan[]
 ): string[][] => {
     const matrix: string[][] = [];
-    matrix.push(['Расчет', session.name?.trim() ? session.name : 'Без названия', '']);
-    matrix.push(['Описание', sanitizeDescription(session.description), '']);
-    matrix.push(['Общие расходы', formatCurrency(totalExpenses), '']);
-    matrix.push(['На каждого', formatCurrency(perPersonShare), '']);
-    matrix.push(['Переводов нужно', String(transfers.length), '']);
+    const sessionName = session.name?.trim() ? session.name : t('common.unnamedSession');
+    matrix.push([t('exportDoc.csv.session'), sessionName, '']);
+    matrix.push([t('exportDoc.csv.description'), sanitizeDescription(session.description), '']);
+    matrix.push([t('exportDoc.csv.total'), formatCurrency(totalExpenses), '']);
+    matrix.push([t('exportDoc.csv.perPerson'), formatCurrency(perPersonShare), '']);
+    matrix.push([t('exportDoc.csv.transfersCount'), String(transfers.length), '']);
     matrix.push(['']);
 
-    matrix.push(['Имя', 'Расходы', 'Обязанность']);
+    matrix.push([t('exportDoc.csv.name'), t('exportDoc.csv.expenses'), t('exportDoc.csv.duty')]);
     people.forEach((person) => {
-        const name = person.name?.trim() ? person.name : `Человек ${person.id}`;
+        const name = person.name?.trim() ? person.name : t('common.personFallback', { id: person.id });
         const expenses = formatCurrency(parseFloat(person.expenses || '0') || 0);
         const dutyValue = person.duty ?? 0;
         matrix.push([name, expenses, formatCurrency(dutyValue)]);
@@ -102,17 +106,23 @@ const createCsvMatrix = (
 
     matrix.push(['']);
     if (transfers.length > 0) {
-        matrix.push(['Переводы между участниками', '', '']);
-        matrix.push(['Плательщик', 'Получатель', 'Сумма']);
+        matrix.push([t('exportDoc.transfers.heading'), '', '']);
+        matrix.push([
+            t('exportDoc.transfers.payer'),
+            t('exportDoc.transfers.receiver'),
+            t('exportDoc.transfers.amount'),
+        ]);
         transfers.forEach((transfer) => {
-            const debtorName = transfer.debtor.name?.trim() ? transfer.debtor.name : `Человек ${transfer.debtor.id}`;
+            const debtorName = transfer.debtor.name?.trim()
+                ? transfer.debtor.name
+                : t('common.personFallback', { id: transfer.debtor.id });
             const creditorName = transfer.creditor.name?.trim()
                 ? transfer.creditor.name
-                : `Человек ${transfer.creditor.id}`;
+                : t('common.personFallback', { id: transfer.creditor.id });
             matrix.push([debtorName, creditorName, formatCurrency(transfer.amount)]);
         });
     } else {
-        matrix.push(['Переводы не требуются — балансы уже выровнены.', '', '']);
+        matrix.push([t('exportDoc.transfers.none'), '', '']);
     }
 
     return matrix;
@@ -324,7 +334,7 @@ export const exportSessionAsPdf = (context: SessionExportContext) => {
     const bottomLimit = pageHeight - margin;
 
     let y = margin;
-    const sessionName = context.session.name?.trim() ? context.session.name : 'Без названия';
+    const sessionName = context.session.name?.trim() ? context.session.name : t('common.unnamedSession');
 
     doc.setFontSize(20);
     doc.setTextColor(...COLORS.text);
@@ -333,7 +343,7 @@ export const exportSessionAsPdf = (context: SessionExportContext) => {
 
     doc.setFontSize(11);
     doc.setTextColor(...COLORS.muted);
-    doc.text('Описание', margin, y);
+    doc.text(t('exportDoc.descriptionLabel'), margin, y);
     y += 16;
 
     doc.setFontSize(12);
@@ -345,7 +355,8 @@ export const exportSessionAsPdf = (context: SessionExportContext) => {
     doc.setFontSize(11);
     doc.setTextColor(...COLORS.muted);
     y += 12;
-    doc.text(`Дата экспорта: ${new Date().toLocaleDateString('ru-RU')}`, margin, y);
+    const exportDate = new Date().toLocaleDateString(i18n.language);
+    doc.text(t('exportDoc.dateLabel', { date: exportDate }), margin, y);
     y += 24;
 
     doc.setFontSize(12);
@@ -356,23 +367,26 @@ export const exportSessionAsPdf = (context: SessionExportContext) => {
         usableWidth,
         cards: [
             {
-                title: 'Общие расходы',
+                title: t('exportDoc.summaryCards.total'),
                 value: formatCurrency(context.totalExpenses),
                 accent: COLORS.summaryBlueAccent,
                 background: COLORS.summaryBlueBg,
             },
             {
-                title: 'На каждого',
+                title: t('exportDoc.summaryCards.perPerson'),
                 value: formatCurrency(context.perPersonShare),
                 accent: COLORS.summaryBlueAccent,
                 background: COLORS.summaryBlueBg,
             },
             {
-                title: 'Переводов нужно',
+                title: t('exportDoc.summaryCards.transfers'),
                 value: String(transfers.length),
                 accent: COLORS.summaryGreenAccent,
                 background: COLORS.summaryGreenBg,
-                caption: transfers.length > 0 ? 'Список ниже' : 'Не требуется',
+                caption:
+                    transfers.length > 0
+                        ? t('exportDoc.summaryCards.transfersCaption')
+                        : t('exportDoc.summaryCards.transfersCaptionEmpty'),
             },
         ],
     });
@@ -382,13 +396,13 @@ export const exportSessionAsPdf = (context: SessionExportContext) => {
     const dutyColumnWidth = usableWidth - nameColumnWidth - expenseColumnWidth;
 
     const participantColumns: TableColumn[] = [
-        { title: 'Участник', width: nameColumnWidth },
-        { title: 'Расходы', width: expenseColumnWidth, align: 'right' },
-        { title: 'Обязанность', width: dutyColumnWidth, align: 'right' },
+        { title: t('exportDoc.participants.name'), width: nameColumnWidth },
+        { title: t('exportDoc.participants.expenses'), width: expenseColumnWidth, align: 'right' },
+        { title: t('exportDoc.participants.duty'), width: dutyColumnWidth, align: 'right' },
     ];
 
     const participantRows: TableCell[][] = context.people.map((person) => {
-        const name = person.name?.trim() ? person.name : `Человек ${person.id}`;
+        const name = person.name?.trim() ? person.name : t('common.personFallback', { id: person.id });
         const expenses = formatCurrency(parseFloat(person.expenses || '0') || 0);
         const dutyValue = person.duty ?? 0;
         const dutyColor = dutyValue > 0 ? COLORS.danger : dutyValue < 0 ? COLORS.success : COLORS.text;
@@ -403,7 +417,7 @@ export const exportSessionAsPdf = (context: SessionExportContext) => {
     y = renderTable(doc, {
         margin,
         startY: y,
-        title: 'Участники и балансы',
+        title: t('exportDoc.participantsTitle'),
         columns: participantColumns,
         rows: participantRows,
         headerFill: COLORS.headerBlue,
@@ -412,16 +426,18 @@ export const exportSessionAsPdf = (context: SessionExportContext) => {
 
     const transferColumnsWidth = usableWidth / 3;
     const transferColumns: TableColumn[] = [
-        { title: 'Плательщик', width: transferColumnsWidth },
-        { title: 'Получатель', width: transferColumnsWidth },
-        { title: 'Сумма', width: usableWidth - transferColumnsWidth * 2, align: 'right' },
+        { title: t('exportDoc.transfers.payer'), width: transferColumnsWidth },
+        { title: t('exportDoc.transfers.receiver'), width: transferColumnsWidth },
+        { title: t('exportDoc.transfers.amount'), width: usableWidth - transferColumnsWidth * 2, align: 'right' },
     ];
 
     const transferRows: TableCell[][] = transfers.map((transfer) => {
-        const debtorName = transfer.debtor.name?.trim() ? transfer.debtor.name : `Человек ${transfer.debtor.id}`;
+        const debtorName = transfer.debtor.name?.trim()
+            ? transfer.debtor.name
+            : t('common.personFallback', { id: transfer.debtor.id });
         const creditorName = transfer.creditor.name?.trim()
             ? transfer.creditor.name
-            : `Человек ${transfer.creditor.id}`;
+            : t('common.personFallback', { id: transfer.creditor.id });
 
         return [
             { text: debtorName },
@@ -434,7 +450,7 @@ export const exportSessionAsPdf = (context: SessionExportContext) => {
         y = renderTable(doc, {
             margin,
             startY: y,
-            title: 'Рекомендованные переводы',
+            title: t('exportDoc.transfers.title'),
             columns: transferColumns,
             rows: transferRows,
             headerFill: COLORS.headerGreen,
@@ -449,7 +465,7 @@ export const exportSessionAsPdf = (context: SessionExportContext) => {
 
         doc.setFontSize(12);
         doc.setTextColor(...COLORS.success);
-        doc.text('Переводы не требуются — балансы уже выровнены.', margin, y);
+        doc.text(t('exportDoc.transfers.none'), margin, y);
         doc.setTextColor(...COLORS.text);
         y += 24;
     }
@@ -462,7 +478,7 @@ export const exportSessionAsPdf = (context: SessionExportContext) => {
 
     doc.setFontSize(10);
     doc.setTextColor(...COLORS.muted);
-    doc.text('Сгенерировано в Raspil — калькуляторе совместных расходов', margin, pageHeight - margin + 10);
+    doc.text(t('exportDoc.footer'), margin, pageHeight - margin + 10);
 
     doc.save(buildFileName(context.session.name, 'pdf'));
 };

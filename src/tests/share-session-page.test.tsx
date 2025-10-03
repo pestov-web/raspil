@@ -27,6 +27,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ShareSessionPage } from '~pages/share-session';
 import { decodeSessionFromShare } from '~shared/lib';
 import { storage } from '~shared/lib/storage';
+import i18n from '~shared/lib/i18n';
 
 describe('<ShareSessionPage />', () => {
     beforeEach(() => {
@@ -56,7 +57,8 @@ describe('<ShareSessionPage />', () => {
             </MemoryRouter>
         );
 
-        expect(await screen.findByText(/Расчет «Пикник» готов/i)).toBeInTheDocument();
+        const successText = i18n.t('shareSessionPage.success', { name: session.name });
+        expect(await screen.findByText(successText)).toBeInTheDocument();
         expect(storage.saveCurrentSession).toHaveBeenCalledWith(session);
         expect(storage.saveNamedSession).toHaveBeenCalledWith(session);
 
@@ -74,10 +76,12 @@ describe('<ShareSessionPage />', () => {
             </MemoryRouter>
         );
 
-        expect(await screen.findByText(/Не найдено данных для расчета/i)).toBeInTheDocument();
+        const noDataText = i18n.t('shareSessionPage.noData');
+        expect(await screen.findByText(noDataText)).toBeInTheDocument();
         expect(decodeSessionFromShare).not.toHaveBeenCalled();
 
-        fireEvent.click(screen.getByRole('button', { name: /На главную/i }));
+        const backButtonText = i18n.t('shareSessionPage.back');
+        fireEvent.click(screen.getByRole('button', { name: backButtonText }));
         expect(navigateMock).toHaveBeenCalledWith('/', { replace: true });
     });
 
@@ -94,7 +98,8 @@ describe('<ShareSessionPage />', () => {
             </MemoryRouter>
         );
 
-        expect(await screen.findByText(/Не удалось распознать ссылку/i)).toBeInTheDocument();
+        const errorText = i18n.t('shareSessionPage.error');
+        expect(await screen.findByText(errorText)).toBeInTheDocument();
         expect(storage.saveCurrentSession).not.toHaveBeenCalled();
         expect(storage.saveNamedSession).not.toHaveBeenCalled();
     });
