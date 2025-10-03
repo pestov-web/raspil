@@ -1,7 +1,8 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Users } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { QRCodeSVG } from 'qrcode.react';
 import type { Person } from '~entities/person';
 import { createPerson } from '~entities/person';
 import type { Session } from '~entities/session';
@@ -14,6 +15,8 @@ import {
     storage,
     isValidExpenseInput,
     SHARE_QUERY_PARAM,
+    exportSessionAsCsv,
+    exportSessionAsPdf,
 } from '~shared/lib';
 import { ExpenseStats } from '~widgets/expense-calculator';
 import { PeopleManagerControls } from '~widgets/people-manager';
@@ -50,6 +53,8 @@ export const HomePage = () => {
     const [isNewSessionConfirmOpen, setNewSessionConfirmOpen] = useState(false);
     const [isShareDialogOpen, setShareDialogOpen] = useState(false);
     const [shareDialogLink, setShareDialogLink] = useState<string | null>(null);
+    const [isQrDialogOpen, setQrDialogOpen] = useState(false);
+    const [qrShareLink, setQrShareLink] = useState<string | null>(null);
 
     const hasInvalidExpenses = useMemo(() => people.some((person) => !isValidExpenseInput(person.expenses)), [people]);
 
@@ -178,26 +183,42 @@ export const HomePage = () => {
         setNewSessionConfirmOpen(false);
     };
 
-    const handleShareSession = async () => {
-        if (!currentSession) return;
+    const syncSessionForShare = useCallback(() => {
+        if (!currentSession) {
+            return null;
+        }
 
-        const sessionToShare = updateSession(currentSession, {
+        const total = getTotalExpenses(people);
+        const updated = updateSession(currentSession, {
             people,
-            totalExpenses: getTotalExpenses(people),
+            totalExpenses: total,
             isCalculated: people.some((p) => p.duty !== 0),
         });
-        setCurrentSession(sessionToShare);
-        storage.saveCurrentSession(sessionToShare);
 
-        const shareUrl = createShareUrl(sessionToShare);
-        const summary = `Общие расходы: ${getTotalExpenses(people).toFixed(2)} ₽\nНа каждого: ${getPerPersonShare(
-            people
-        ).toFixed(2)} ₽`;
+        setCurrentSession(updated);
+        storage.saveCurrentSession(updated);
+
+        return {
+            session: updated,
+            shareUrl: createShareUrl(updated),
+            total,
+            perPersonShare: getPerPersonShare(people),
+        };
+    }, [currentSession, people]);
+
+    const handleShareSession = async () => {
+        const shareContext = syncSessionForShare();
+        if (!shareContext) {
+            return;
+        }
+
+        const { shareUrl, total, perPersonShare } = shareContext;
+        const summary = `Общие расходы: ${total.toFixed(2)} ₽\nНа каждого: ${perPersonShare.toFixed(2)} ₽`;
 
         if (navigator.share) {
             try {
                 await navigator.share({
-                    title: sessionToShare.name || 'Распил расходов',
+                    title: shareContext.session.name || 'Распил расходов',
                     text: summary,
                     url: shareUrl,
                 });
@@ -219,9 +240,66 @@ export const HomePage = () => {
         }
     };
 
+    const handleShowQrCode = () => {
+        const shareContext = syncSessionForShare();
+        if (!shareContext) {
+            return;
+        }
+
+        setQrShareLink(shareContext.shareUrl);
+        setQrDialogOpen(true);
+    };
+
+    const handleExportCsv = () => {
+        const shareContext = syncSessionForShare();
+        if (!shareContext) {
+            toast.error('Сначала добавьте участников для экспорта');
+            return;
+        }
+
+        try {
+            exportSessionAsCsv({
+                session: shareContext.session,
+                people,
+                totalExpenses: shareContext.total,
+                perPersonShare: shareContext.perPersonShare,
+            });
+            toast.success('CSV-файл сохранен');
+        } catch (error) {
+            console.error('Failed to export CSV:', error);
+            toast.error('Не удалось экспортировать CSV. Попробуйте ещё раз.');
+        }
+    };
+
+    const handleExportPdf = () => {
+        const shareContext = syncSessionForShare();
+        if (!shareContext) {
+            toast.error('Сначала добавьте участников для экспорта');
+            return;
+        }
+
+        try {
+            exportSessionAsPdf({
+                session: shareContext.session,
+                people,
+                totalExpenses: shareContext.total,
+                perPersonShare: shareContext.perPersonShare,
+            });
+            toast.success('PDF-файл сохранен');
+        } catch (error) {
+            console.error('Failed to export PDF:', error);
+            toast.error('Не удалось экспортировать PDF. Попробуйте ещё раз.');
+        }
+    };
+
     const closeShareDialog = () => {
         setShareDialogOpen(false);
         setShareDialogLink(null);
+    };
+
+    const closeQrDialog = () => {
+        setQrDialogOpen(false);
+        setQrShareLink(null);
     };
 
     const handleCopyShareDialogLink = async () => {
@@ -276,6 +354,9 @@ export const HomePage = () => {
                                 onSaveSession={handleSaveSession}
                                 onNewSession={handleNewSession}
                                 onShareSession={handleShareSession}
+                                onShowShareQr={handleShowQrCode}
+                                onExportCsv={handleExportCsv}
+                                onExportPdf={handleExportPdf}
                             />
                         </div>
                     </div>
@@ -440,6 +521,87 @@ export const HomePage = () => {
                                             Скопировать
                                         </button>
                                     </div>
+                                </div>
+                            </Dialog.Panel>
+                        </Transition.Child>
+                    </div>
+                </Dialog>
+            </Transition>
+
+            <Transition show={isQrDialogOpen} as={Fragment} appear>
+                <Dialog as='div' className='relative z-50' onClose={closeQrDialog}>
+                    <Transition.Child
+                        as={Fragment}
+                        enter='duration-200 ease-out'
+                        enterFrom='opacity-0'
+                        enterTo='opacity-100'
+                        leave='duration-150 ease-in'
+                        leaveFrom='opacity-100'
+                        leaveTo='opacity-0'
+                    >
+                        <div className='fixed inset-0 bg-black/30 backdrop-blur-sm' />
+                    </Transition.Child>
+
+                    <div className='fixed inset-0 flex items-center justify-center p-4'>
+                        <Transition.Child
+                            as={Fragment}
+                            enter='duration-200 ease-out'
+                            enterFrom='opacity-0 scale-95'
+                            enterTo='opacity-100 scale-100'
+                            leave='duration-150 ease-in'
+                            leaveFrom='opacity-100 scale-100'
+                            leaveTo='opacity-0 scale-95'
+                        >
+                            <Dialog.Panel className='w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl transition-colors dark:border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100'>
+                                <Dialog.Title className='text-lg font-semibold text-gray-900 dark:text-slate-100'>
+                                    Поделиться через QR-код
+                                </Dialog.Title>
+                                <Dialog.Description className='mt-2 text-sm text-gray-600 dark:text-slate-400'>
+                                    Отсканируйте код на другом устройстве, чтобы открыть расчет.
+                                </Dialog.Description>
+
+                                <div className='mt-6 flex justify-center'>
+                                    {qrShareLink ? (
+                                        <div className='rounded-2xl border border-gray-200 bg-white p-4 shadow-inner dark:border-slate-700 dark:bg-slate-800'>
+                                            <QRCodeSVG value={qrShareLink} size={224} includeMargin />
+                                        </div>
+                                    ) : (
+                                        <p className='text-sm text-gray-500 dark:text-slate-400'>
+                                            Не удалось сформировать QR-код.
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className='mt-6 flex justify-between items-center gap-3'>
+                                    <div className='text-xs text-gray-500 break-all dark:text-slate-500'>
+                                        {qrShareLink}
+                                    </div>
+                                    <button
+                                        type='button'
+                                        onClick={() => {
+                                            if (!qrShareLink) return;
+                                            void navigator.clipboard
+                                                .writeText(qrShareLink)
+                                                .then(() => toast.success('Ссылка скопирована'))
+                                                .catch((error) => {
+                                                    console.error('Failed to copy QR link:', error);
+                                                    toast.error('Не удалось скопировать ссылку.');
+                                                });
+                                        }}
+                                        className='rounded-xl border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
+                                    >
+                                        Скопировать ссылку
+                                    </button>
+                                </div>
+
+                                <div className='mt-6 flex justify-end'>
+                                    <button
+                                        type='button'
+                                        onClick={closeQrDialog}
+                                        className='rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700'
+                                    >
+                                        Закрыть
+                                    </button>
                                 </div>
                             </Dialog.Panel>
                         </Transition.Child>

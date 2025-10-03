@@ -1,12 +1,26 @@
 import { Fragment, useState } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
-import { Menu, Settings2, Save, PlusCircle, X, Share2 } from 'lucide-react';
+import { Dialog, Popover, Transition } from '@headlessui/react';
+import {
+    Menu,
+    Settings2,
+    Save,
+    PlusCircle,
+    X,
+    Share2,
+    QrCode,
+    FileDown,
+    FileSpreadsheet,
+    ChevronDown,
+} from 'lucide-react';
 
 interface SessionControlsProps {
     onOpenManager: () => void;
     onSaveSession: () => void;
     onNewSession: () => void;
     onShareSession: () => void | Promise<void>;
+    onShowShareQr: () => void;
+    onExportCsv: () => void;
+    onExportPdf: () => void;
 }
 
 export const SessionControls = ({
@@ -14,44 +28,118 @@ export const SessionControls = ({
     onSaveSession,
     onNewSession,
     onShareSession,
+    onShowShareQr,
+    onExportCsv,
+    onExportPdf,
 }: SessionControlsProps) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    const handleAction = async (action: () => void | Promise<void>) => {
+    const runAction = async (action: () => void | Promise<void>, onComplete?: () => void) => {
         try {
             await action();
         } finally {
-            setIsMobileMenuOpen(false);
+            onComplete?.();
         }
     };
 
     return (
         <div className='flex items-center gap-2'>
             <div className='hidden md:flex items-center gap-2'>
-                <button
-                    onClick={() => handleAction(onOpenManager)}
-                    className='px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm dark:bg-purple-500 dark:hover:bg-purple-600'
-                >
-                    Управление
-                </button>
-                <button
-                    onClick={() => handleAction(onSaveSession)}
-                    className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm dark:bg-blue-500 dark:hover:bg-blue-600'
-                >
-                    Сохранить
-                </button>
-                <button
-                    onClick={() => handleAction(onNewSession)}
-                    className='px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm dark:bg-emerald-500 dark:hover:bg-emerald-600'
-                >
-                    Новая
-                </button>
-                <button
-                    onClick={() => handleAction(onShareSession)}
-                    className='px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors text-sm dark:bg-amber-400 dark:text-slate-900 dark:hover:bg-amber-500'
-                >
-                    Поделиться
-                </button>
+                <Popover className='relative'>
+                    {({ close }) => (
+                        <>
+                            <Popover.Button className='flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600'>
+                                Сессия
+                                <ChevronDown size={16} className='opacity-80' />
+                            </Popover.Button>
+                            <Transition
+                                as={Fragment}
+                                enter='transition duration-150 ease-out'
+                                enterFrom='opacity-0 translate-y-1'
+                                enterTo='opacity-100 translate-y-0'
+                                leave='transition duration-100 ease-in'
+                                leaveFrom='opacity-100 translate-y-0'
+                                leaveTo='opacity-0 translate-y-1'
+                            >
+                                <Popover.Panel className='absolute right-0 z-30 mt-2 w-56 rounded-xl border border-purple-200 bg-white p-2 shadow-xl dark:border-purple-900/40 dark:bg-slate-900'>
+                                    <button
+                                        onClick={() => runAction(onOpenManager, close)}
+                                        className='flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-purple-700 transition hover:bg-purple-50 dark:text-purple-200 dark:hover:bg-purple-900/40'
+                                    >
+                                        <Settings2 size={16} />
+                                        Управление сессиями
+                                    </button>
+                                    <button
+                                        onClick={() => runAction(onSaveSession, close)}
+                                        className='flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-blue-700 transition hover:bg-blue-50 dark:text-blue-200 dark:hover:bg-blue-900/40'
+                                    >
+                                        <Save size={16} />
+                                        Сохранить сессию
+                                    </button>
+                                    <button
+                                        onClick={() => runAction(onNewSession, close)}
+                                        className='flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-green-700 transition hover:bg-green-50 dark:text-emerald-200 dark:hover:bg-emerald-900/40'
+                                    >
+                                        <PlusCircle size={16} />
+                                        Новая сессия
+                                    </button>
+                                </Popover.Panel>
+                            </Transition>
+                        </>
+                    )}
+                </Popover>
+
+                <Popover className='relative'>
+                    {({ close }) => (
+                        <>
+                            <Popover.Button className='flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600'>
+                                Экспорт & шаринг
+                                <ChevronDown size={16} className='opacity-80' />
+                            </Popover.Button>
+                            <Transition
+                                as={Fragment}
+                                enter='transition duration-150 ease-out'
+                                enterFrom='opacity-0 translate-y-1'
+                                enterTo='opacity-100 translate-y-0'
+                                leave='transition duration-100 ease-in'
+                                leaveFrom='opacity-100 translate-y-0'
+                                leaveTo='opacity-0 translate-y-1'
+                            >
+                                <Popover.Panel className='absolute right-0 z-30 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900'>
+                                    <button
+                                        onClick={() => runAction(onShareSession, close)}
+                                        className='flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-amber-700 transition hover:bg-amber-50 dark:text-amber-200 dark:hover:bg-amber-900/40'
+                                    >
+                                        <Share2 size={16} />
+                                        Поделиться ссылкой
+                                    </button>
+                                    <button
+                                        onClick={() => runAction(onShowShareQr, close)}
+                                        className='flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-indigo-700 transition hover:bg-indigo-50 dark:text-indigo-200 dark:hover:bg-indigo-900/40'
+                                    >
+                                        <QrCode size={16} />
+                                        Показать QR-код
+                                    </button>
+                                    <div className='my-1 h-px bg-slate-200 dark:bg-slate-700' />
+                                    <button
+                                        onClick={() => runAction(onExportPdf, close)}
+                                        className='flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/40'
+                                    >
+                                        <FileDown size={16} />
+                                        Экспорт в PDF
+                                    </button>
+                                    <button
+                                        onClick={() => runAction(onExportCsv, close)}
+                                        className='flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/40'
+                                    >
+                                        <FileSpreadsheet size={16} />
+                                        Экспорт в CSV
+                                    </button>
+                                </Popover.Panel>
+                            </Transition>
+                        </>
+                    )}
+                </Popover>
             </div>
 
             <div className='md:hidden'>
@@ -104,32 +192,53 @@ export const SessionControls = ({
 
                                 <div className='grid gap-3'>
                                     <button
-                                        onClick={() => handleAction(onOpenManager)}
+                                        onClick={() => runAction(onOpenManager, () => setIsMobileMenuOpen(false))}
                                         className='flex w-full items-center gap-3 rounded-xl bg-purple-50 px-4 py-3 text-purple-700 transition-colors hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-200 dark:hover:bg-purple-900/50'
                                     >
                                         <Settings2 size={18} />
                                         Управление сессиями
                                     </button>
                                     <button
-                                        onClick={() => handleAction(onSaveSession)}
+                                        onClick={() => runAction(onSaveSession, () => setIsMobileMenuOpen(false))}
                                         className='flex w-full items-center gap-3 rounded-xl bg-blue-50 px-4 py-3 text-blue-700 transition-colors hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:hover:bg-blue-900/50'
                                     >
                                         <Save size={18} />
                                         Сохранить сессию
                                     </button>
                                     <button
-                                        onClick={() => handleAction(onNewSession)}
+                                        onClick={() => runAction(onNewSession, () => setIsMobileMenuOpen(false))}
                                         className='flex w-full items-center gap-3 rounded-xl bg-green-50 px-4 py-3 text-green-700 transition-colors hover:bg-green-100 dark:bg-emerald-900/30 dark:text-emerald-200 dark:hover:bg-emerald-900/50'
                                     >
                                         <PlusCircle size={18} />
                                         Новая сессия
                                     </button>
                                     <button
-                                        onClick={() => handleAction(onShareSession)}
+                                        onClick={() => runAction(onShareSession, () => setIsMobileMenuOpen(false))}
                                         className='flex w-full items-center gap-3 rounded-xl bg-amber-50 px-4 py-3 text-amber-700 transition-colors hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-200 dark:hover:bg-amber-900/50'
                                     >
                                         <Share2 size={18} />
                                         Поделиться ссылкой
+                                    </button>
+                                    <button
+                                        onClick={() => runAction(onShowShareQr, () => setIsMobileMenuOpen(false))}
+                                        className='flex w-full items-center gap-3 rounded-xl bg-indigo-50 px-4 py-3 text-indigo-700 transition-colors hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-200 dark:hover:bg-indigo-900/50'
+                                    >
+                                        <QrCode size={18} />
+                                        Показать QR
+                                    </button>
+                                    <button
+                                        onClick={() => runAction(onExportPdf, () => setIsMobileMenuOpen(false))}
+                                        className='flex w-full items-center gap-3 rounded-xl bg-slate-100 px-4 py-3 text-slate-700 transition-colors hover:bg-slate-200 dark:bg-slate-800/40 dark:text-slate-200 dark:hover:bg-slate-800/60'
+                                    >
+                                        <FileDown size={18} />
+                                        Экспорт в PDF
+                                    </button>
+                                    <button
+                                        onClick={() => runAction(onExportCsv, () => setIsMobileMenuOpen(false))}
+                                        className='flex w-full items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 text-slate-700 transition-colors hover:bg-slate-100 dark:bg-slate-800/30 dark:text-slate-200 dark:hover:bg-slate-800/50'
+                                    >
+                                        <FileSpreadsheet size={18} />
+                                        Экспорт в CSV
                                     </button>
                                 </div>
                             </Dialog.Panel>

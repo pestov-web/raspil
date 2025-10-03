@@ -38,7 +38,7 @@ src/
 │   └── session/            # Сущность "Сессия" и метаданные
 │
 └── shared/                 # ⚡ Общие ресурсы
-    ├── lib/                # Бизнес-утилиты (calculations, storage, share, validation, theme)
+    ├── lib/                # Бизнес-утилиты (calculations, storage, share, export, validation, theme)
     ├── ui/                 # Компоненты UI-кита (StatCard, ToastProvider, ConfirmDialog)
     ├── styles/             # Tailwind и глобальные стили (dark-mode @custom-variant)
     └── types/              # Общие типы и декларации

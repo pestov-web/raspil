@@ -1,13 +1,7 @@
 import React from 'react';
 import { ArrowRight, TrendingUp, TrendingDown } from 'lucide-react';
 import type { Person } from '~entities/person';
-import { getDebtors, getCreditors } from '~shared/lib';
-
-interface DebtorCreditorPair {
-    debtor: Person;
-    creditor: Person;
-    amount: number;
-}
+import { getDebtors, getCreditors, calculateTransfers } from '~shared/lib';
 
 interface ExpenseSummaryProps {
     people: Person[];
@@ -18,42 +12,7 @@ interface ExpenseSummaryProps {
 export const ExpenseSummary: React.FC<ExpenseSummaryProps> = ({ people, totalExpenses, perPersonShare }) => {
     const debts = getDebtors(people);
     const credits = getCreditors(people);
-
-    // Оптимальные переводы между участниками
-    const calculateOptimalTransfers = (): DebtorCreditorPair[] => {
-        const debtorQueue = debts
-            .map((person) => ({ person, remaining: person.duty }))
-            .sort((a, b) => b.remaining - a.remaining);
-        const creditorQueue = credits
-            .map((person) => ({ person, remaining: Math.abs(person.duty) }))
-            .sort((a, b) => b.remaining - a.remaining);
-
-        const transfers: DebtorCreditorPair[] = [];
-        let debtIndex = 0;
-        let creditIndex = 0;
-
-        while (debtIndex < debtorQueue.length && creditIndex < creditorQueue.length) {
-            const debtor = debtorQueue[debtIndex];
-            const creditor = creditorQueue[creditIndex];
-
-            const amount = Math.min(debtor.remaining, creditor.remaining);
-
-            if (amount > 0.01) {
-                // Игнорируем копейки
-                transfers.push({ debtor: debtor.person, creditor: creditor.person, amount });
-            }
-
-            debtor.remaining -= amount;
-            creditor.remaining -= amount;
-
-            if (debtor.remaining <= 0.01) debtIndex++;
-            if (creditor.remaining <= 0.01) creditIndex++;
-        }
-
-        return transfers;
-    };
-
-    const transfers = calculateOptimalTransfers();
+    const transfers = calculateTransfers(people);
 
     if (totalExpenses === 0) return null;
 

@@ -18,6 +18,7 @@
     -   Автосохранение текущей сессии в LocalStorage на каждое изменение
     -   Сохранение/загрузка/удаление именных сессий, импорт/экспорт бэкапов
     -   Генерация шаринг-ссылок через корневой `/?data=...`; при загрузке приложение перенаправляет на `/share`
+    -   Показ QR-кода для шаринга и экспорт расчёта в CSV/PDF
 
 ## Архитектура FSD и ключевые паттерны
 
@@ -118,12 +119,17 @@
 -   **Расчёты:**
     -   Бизнес-логика — `~shared/lib/calculations`
     -   Парсинг сумм: `parseFloat(person.expenses) || 0`
-    -   Округление: `Math.round(value * 100) / 100`
+    -   Округление: `roundToCents()` (helpers из `calculations.ts`, избегаем ручного `Math.round`)
+    -   Оптимальные переводы: `calculateTransfers(people)` возвращает список `TransferPlan`
 -   **Persistence:**
     -   Используйте `storage` из `~shared/lib/storage`
     -   При восстановлении сессий возвращайте даты к `Date`
     -   Напрямую с `localStorage` не работаем
     -   Шаринг (`createShareUrl`, `decodeSessionFromShare`) — в `~shared/lib/share`
+-   **Экспорт:**
+    -   CSV/PDF собраны в `~shared/lib/export`; перед вызовом синхронизируйте сессию
+    -   PDF использует `ensureRobotoFont` из `pdf-fonts.ts` (встроенный Roboto с `Identity-H`)
+    -   CSV добавляет UTF-8 BOM; не забывайте про список переводов и корректное экранирование
 -   **Обратная связь:**
     -   Не используйте `alert`/`prompt`/`confirm`; вместо этого `useToast` + Headless UI `Dialog`
     -   Для подтверждений (удаление, новая сессия) — `ConfirmDialog`
@@ -132,13 +138,15 @@
 
 ## Примеры кода
 
--   **Новая функция расчёта:**
+-   **Использование общих расчётов:**
 
     ```typescript
-    // Добавить в shared/lib/calculations.ts
-    export const calculateTotalDebt = (people: Person[]) => {
-        return people.filter((p) => p.duty > 0).reduce((sum, p) => sum + p.duty, 0);
-    };
+    import { calculateTransfers } from '~shared/lib/calculations';
+
+    const transfers = calculateTransfers(people);
+    transfers.forEach(({ debtor, creditor, amount }) => {
+        // debtor.duty > 0, creditor.duty < 0, amount уже округлён
+    });
     ```
 
 -   **Новый виджет:**

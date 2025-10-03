@@ -30,7 +30,8 @@
             "~features/*": ["./src/features/*"],
             "~entities/*": ["./src/entities/*"],
             "~shared/*": ["./src/shared/*"]
-        }
+        },
+        "ignoreDeprecations": "6.0"
     },
     "include": ["src", "src/shared/types/global.d.ts"]
 }
