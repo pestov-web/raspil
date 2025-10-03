@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Users } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { Person } from '~entities/person';
 import { createPerson } from '~entities/person';
 import type { Session } from '~entities/session';
@@ -12,6 +13,7 @@ import {
     createShareUrl,
     storage,
     isValidExpenseInput,
+    SHARE_QUERY_PARAM,
 } from '~shared/lib';
 import { ExpenseStats } from '~widgets/expense-calculator';
 import { PeopleManagerControls } from '~widgets/people-manager';
@@ -23,7 +25,23 @@ import { useToast, ConfirmDialog } from '~shared/ui';
 import { ThemeToggle } from '~features/toggle-theme';
 
 export const HomePage = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
     const [people, setPeople] = useState<Person[]>([{ id: 1, name: '', expenses: '', duty: 0 }]);
+    useEffect(() => {
+        if (location.pathname !== '/') {
+            return;
+        }
+
+        const params = new URLSearchParams(location.search);
+        const encoded = params.get(SHARE_QUERY_PARAM);
+        if (!encoded) {
+            return;
+        }
+
+        navigate(`/share?${SHARE_QUERY_PARAM}=${encoded}`, { replace: true });
+    }, [location.pathname, location.search, navigate]);
+
     const [currentSession, setCurrentSession] = useState<Session | null>(null);
     const [showSessionManager, setShowSessionManager] = useState(false);
     const toast = useToast();
