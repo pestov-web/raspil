@@ -1,5 +1,7 @@
 # 🧮 Raspil - Калькулятор расходов
 
+> 🇷🇺 Этот README доступен на двух языках: [Русский](#-raspil---калькулятор-расходов) · [English](#-raspil---expense-calculator)
+
 <div align="center">
 
 ![Raspil Logo](https://img.shields.io/badge/💰-Raspil-4f46e5?style=for-the-badge&labelColor=white)
@@ -225,7 +227,7 @@ pnpm test:coverage    # Покрытие кода
 
 ## 📄 Лицензия
 
-Этот проект распространяется под лицензией MIT. Подробности в файле [LICENSE](LICENSE).
+Проект распространяется по коммерческой лицензии **Raspil Commercial License v1.0**. Полный текст приведён в файле [LICENSE](LICENSE). Для получения производственных или коммерческих прав обратитесь к автору проекта.
 
 ## 👨‍💻 Автор
 
@@ -238,5 +240,238 @@ pnpm test:coverage    # Покрытие кода
 **Raspil** — делаем разделение расходов простым и справедливым! 💰✨
 
 [🌟 Поставить звезду](https://github.com/pestov-web/raspil) • [🐛 Сообщить об ошибке](https://github.com/pestov-web/raspil/issues) • [💡 Предложить идею](https://github.com/pestov-web/raspil/discussions)
+
+</div>
+
+---
+
+# 🧮 Raspil - Expense Calculator
+
+> 🇬🇧 This README is available in two languages: [English](#-raspil---expense-calculator) · [Русский](#-raspil---калькулятор-расходов)
+
+<div align="center">
+
+![Raspil Logo](https://img.shields.io/badge/💰-Raspil-4f46e5?style=for-the-badge&labelColor=white)
+
+**A fast, friendly tool for splitting shared expenses fairly**
+
+[![React](https://img.shields.io/badge/React-19.1.1-61dafb?logo=react)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178c6?logo=typescript)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-7.1.3-646cff?logo=vite)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1.12-06b6d4?logo=tailwindcss)](https://tailwindcss.com/)
+
+![Feature-Sliced Design](https://img.shields.io/badge/Architecture-Feature--Sliced%20Design-success)
+![PWA Configured](https://img.shields.io/badge/PWA-Configured-yellow)
+![ESLint](https://img.shields.io/badge/ESLint-Configured-4b32c3?logo=eslint)
+![Vitest](https://img.shields.io/badge/Vitest-Testing-6e9f18?logo=vitest)
+
+</div>
+
+## 🌟 Features
+
+-   👥 **Participant management** — add or remove people in a couple of clicks
+-   💸 **Expense tracking** — enter how much each person spent with instant validation
+-   🧮 **Automatic settlements** — calculate who should pay or receive money in one tap
+-   💰 **Optimised transfers** — minimise the number of payments required
+-   🗂️ **Session storage** — save, restore, import and export named scenarios
+-   🔔 **Inline feedback** — custom toasts and dialogs instead of blocking alerts
+-   🔗 **Shareable links** — generate URLs with encoded payloads via the `/?data=...` parameter
+-   📱 **QR sharing** — show a QR code for quickly opening the calculation on another device
+-   📤 **CSV & PDF export** — produce structured reports with balances and transfers
+-   📱 **PWA-ready** — baseline configuration to install the app on devices
+-   🎨 **Modern UI** — Tailwind CSS styling with Lucide icons and smooth gradients
+-   ⚡ **Instant processing** — all calculations happen locally with zero backend calls
+-   🌗 **Dark / light theme** — remember the preferred theme automatically
+-   🌍 **Bilingual interface** — switch between RU ↔ EN instantly and persist the choice
+-   🧭 **Inline validation** — highlight invalid numbers before running the calculation
+-   ✨ **Animated cards** — smooth fade-in transitions for tables and saved sessions
+
+## 🚀 Quick start
+
+```bash
+git clone https://github.com/pestov-web/raspil.git
+cd raspil
+pnpm install
+pnpm dev
+```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+## 🏗️ Architecture
+
+The project follows **Feature-Sliced Design (FSD)** for scalable front-end architecture:
+
+```
+src/
+├── app/                    # 🏗 Application bootstrap
+│   ├── App.tsx            # Root component + providers (Router, i18n, Toasts)
+│   └── main.tsx           # Entry point
+├── pages/                 # 📄 Route-level pages
+│   ├── home/              # Main calculator, state management
+│   └── share-session/     # Import calculations from a shared link
+├── widgets/               # 🧩 Composite UI blocks
+│   ├── expense-calculator/
+│   ├── expense-summary/
+│   ├── people-manager/
+│   ├── people-table/
+│   ├── session-controls/
+│   └── session-manager/
+├── features/              # 🚀 User scenarios / actions
+│   ├── add-person/
+│   ├── calculate-duties/
+│   ├── remove-person/
+│   ├── save-session/
+│   ├── load-session/
+│   ├── toggle-theme/
+│   └── toggle-language/
+├── entities/              # 🎯 Domain models
+│   ├── person/            # Person model and helpers
+│   └── session/           # Session snapshots and metadata
+├── shared/                # ⚡ Reusable resources
+│   ├── lib/               # Calculations, storage, sharing, validation, theme, i18n
+│   ├── ui/                # Shared UI components (StatCard, ToastProvider, ConfirmDialog)
+│   ├── styles/            # Global styles
+│   └── assets/            # Static assets
+└── tests/                 # 🧪 Vitest specs
+```
+
+## 🛠️ Tech stack
+
+### Frontend
+
+-   **React 19.1.1** — the latest React features with concurrent-friendly APIs
+-   **TypeScript 5.6** — strict typing for safer development
+-   **Vite 7.1.3** — lightning-fast dev server and bundler
+-   **Tailwind CSS 4.1.12** — utility-first styling with dark mode support
+-   **React Router 7.9.3** — routing and deep-linking to shared sessions
+
+### Architecture & tooling
+
+-   **Feature-Sliced Design** — predictable project structure
+-   **Path aliases** — ergonomic imports (`~entities/person`, `~shared/ui`)
+-   **i18next + react-i18next** — localisation and runtime language switching
+-   **ESLint** — modern linting setup with Feature-Sliced rules
+-   **Vitest** — blazing-fast unit tests with jsdom
+-   **PWA baseline** — service worker & manifest via Vite plugin
+
+### UI / UX
+
+-   **Lucide React** — flexible SVG icon set
+-   **Responsive layout** — works great on desktop and mobile
+-   **Gradient backgrounds** — polished look and feel
+-   **Headless UI dialogs + toasts** — accessible overlays and notifications
+
+## 📱 PWA status
+
+Raspil ships with a **baseline PWA configuration**:
+
+-   ✅ **Service Worker** — generated automatically via Vite PWA plugin
+-   ✅ **Web App Manifest** — installable metadata
+-   ✅ **Offline caching** — static assets cached out of the box
+-   🔄 **Work in progress** — custom icons and advanced strategies can be added later
+
+> **Note:** For a production-grade PWA, ship branded icons and tweak the caching strategy.
+
+## 🧪 Testing
+
+```bash
+# Run tests
+pnpm test
+
+# Coverage report
+pnpm test:coverage
+```
+
+> Need a single run without watch mode? Use `pnpm test:run`.
+
+## 🔧 Available scripts
+
+```bash
+# Development
+pnpm dev              # Start Vite dev server
+pnpm build            # Production build
+pnpm preview          # Preview the production bundle
+
+# Code quality
+pnpm lint             # Run ESLint
+
+# Testing
+pnpm test             # Vitest in watch mode
+pnpm test:run         # Single run
+pnpm test:coverage    # Coverage report
+```
+
+## 🎯 How to use
+
+1. **Add participants** — click “Add person” and provide their names
+2. **Enter expenses** — type the amount each person spent; invalid values highlight instantly
+3. **Calculate** — hit “Calculate” to recompute balances
+4. **Review transfers** — the summary shows who should pay and who should receive
+5. **Share the result** — save the session and copy the shareable link
+6. **Switch languages** — use the 🌐 icon in the header to toggle RU ↔ EN (stored in `localStorage`)
+7. **Pick a theme** — toggle dark/light mode; the choice is remembered automatically
+
+## 🌍 Localisation
+
+-   Supports 🇷🇺 Russian and 🇬🇧 English with instant switching
+-   The `LanguageToggle` feature persists the language in `localStorage`
+-   All UI strings, exports (CSV/PDF) and sharing flows use i18next translations; add new keys in `~shared/lib/i18n.ts`
+-   Blank session or participant names fall back to safe defaults (`Untitled session`, `Person {{id}}`)
+-   Vitest initialises i18n via `src/tests/setup.ts`, so assertions should rely on `i18n.t(...)`
+
+## 🔗 Export & sharing
+
+-   **Link sharing** — “Share” generates a short URL (`/?data=...`) and copies it to the clipboard or opens the native share sheet
+-   **QR code** — display a QR for quick sharing between devices
+-   **CSV export** — UTF-8 BOM and structured columns (summary, participants, transfers); works nicely with Excel/Numbers
+-   **PDF export** — printable report with cards, tables and coloured balances
+-   All exports include the “who pays whom” list for offline reference
+
+## 💡 UX highlights
+
+-   **Dark / light theme** — stored in `localStorage`, toggled via the header
+-   **Fade-in animations** — Tailwind keyframe `fade-in-up` for tables and session cards
+-   **Inline validation** — prevents running calculations with invalid inputs
+-   **Friendly notifications** — Headless UI dialogs and custom toasts
+
+## 🌗 Theming for developers
+
+-   Tailwind runs in `class` mode; `src/shared/styles/index.css` defines `@custom-variant dark (&:where(.dark, .dark *));`
+-   `theme.apply()` from `~shared/lib/theme.ts` keeps the `.dark` class, `data-theme`, and `color-scheme` in sync on `<html>` / `<body>`
+-   A pre-paint bootstrap in `index.html` avoids theme flashes on load
+-   When adding global styles, rely on Tailwind tokens or `color-scheme` and respect the dark variant selector
+
+## 🤝 Contributing
+
+We welcome contributions!
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development guidelines
+
+-   Follow the **Feature-Sliced Design** architecture
+-   Use **TypeScript** with strict typing
+-   Write **tests** for new behaviour
+-   Keep the **ESLint** rules green
+
+## 📄 License
+
+Raspil is distributed under the **Raspil Commercial License v1.0**. See [LICENSE](LICENSE) for the full text. For production or commercial use, contact legal@pestov-web.com.
+
+## 👨‍💻 Author
+
+**pestov-web** — [GitHub](https://github.com/pestov-web)
+
+---
+
+<div align="center">
+
+**Raspil** — splitting shared expenses made fair and effortless 💰✨
+
+[🌟 Star](https://github.com/pestov-web/raspil) • [🐛 Report a bug](https://github.com/pestov-web/raspil/issues) • [💡 Share an idea](https://github.com/pestov-web/raspil/discussions)
 
 </div>
